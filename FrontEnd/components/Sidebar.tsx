@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: "⊞" },
@@ -21,6 +22,14 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter(); // ✅ moved inside the component
+
+  const handleLogout = async () => { // ✅ moved inside the component
+    await fetch("/api/logout", { method: "POST" });
+    toast.success("Logged out successfully");
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <>
@@ -58,7 +67,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           })}
         </nav>
 
-        <div className="px-2 py-6 border-t border-gray-700">
+        <div className="px-2 py-6 border-t border-gray-700 flex flex-col gap-1">
           <Link
             href="/dashboard/settings"
             title={collapsed ? "Settings" : undefined}
@@ -67,6 +76,15 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
             <span className="text-lg flex-shrink-0">⚙️</span>
             {!collapsed && <span>Settings</span>}
           </Link>
+
+          <button
+            onClick={handleLogout}
+            title={collapsed ? "Logout" : undefined}
+            className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-400 hover:bg-red-900/40 hover:text-red-400 transition-colors w-full ${collapsed ? "justify-center" : ""}`}
+          >
+            <span className="text-lg flex-shrink-0">🚪</span>
+            {!collapsed && <span>Logout</span>}
+          </button>
         </div>
       </aside>
 
@@ -94,7 +112,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           })}
         </nav>
 
-        <div className="px-2 py-6 border-t border-gray-700">
+        <div className="px-2 py-6 border-t border-gray-700 flex flex-col gap-1">
           <Link
             href="/dashboard/settings"
             onClick={onMobileClose}
@@ -103,6 +121,14 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
             <span className="text-lg flex-shrink-0">⚙️</span>
             <span>Settings</span>
           </Link>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-400 hover:bg-red-900/40 hover:text-red-400 transition-colors w-full"
+          >
+            <span className="text-lg flex-shrink-0">🚪</span>
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
     </>
