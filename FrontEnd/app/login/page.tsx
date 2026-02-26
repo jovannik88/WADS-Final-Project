@@ -42,6 +42,7 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     } catch (error: any) {
+      if (error.code === "auth/popup-closed-by-user") return; // user closed popup, no toast needed
       toast.error(error.message || "Google login failed");
     } finally {
       setGoogleLoading(false);
@@ -49,10 +50,25 @@ export default function LoginPage() {
   };
 
   const handleEmailLogin = async () => {
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
+    // Empty field validation
+    if (!email && !password) {
+      toast.error("Please enter your email and password");
       return;
     }
+    if (!email) {
+      toast.error("Please enter your email");
+      return;
+    }
+    if (!password) {
+      toast.error("Please enter your password");
+      return;
+    }
+    // Basic email format check
+    if (!email.includes("@") || !email.includes(".")) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
     try {
       setLoading(true);
       const result = await signInWithEmailAndPassword(auth, email, password);
@@ -63,13 +79,15 @@ export default function LoginPage() {
       router.refresh();
     } catch (error: any) {
       const messages: Record<string, string> = {
-        "auth/user-not-found": "No account found with this email",
-        "auth/wrong-password": "Incorrect password",
-        "auth/invalid-email": "Invalid email format",
+        "auth/user-not-found":     "No account found with this email",
+        "auth/wrong-password":     "Incorrect password",
+        "auth/invalid-email":      "Invalid email format",
         "auth/invalid-credential": "Invalid email or password",
-        "auth/too-many-requests": "Too many attempts. Try again later",
+        "auth/user-disabled":      "This account has been disabled",
+        "auth/too-many-requests":  "Too many failed attempts. Try again later",
+        "auth/network-request-failed": "Network error. Check your connection",
       };
-      toast.error(messages[error.code] || "Login failed");
+      toast.error(messages[error.code] || "Login failed. Please try again");
     } finally {
       setLoading(false);
     }
@@ -83,6 +101,7 @@ export default function LoginPage() {
       </div>
 
       <div className="w-full max-w-md relative z-10">
+
         {/* Logo / Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-teal-600 mb-5 shadow-lg shadow-teal-900">
@@ -100,7 +119,7 @@ export default function LoginPage() {
             {/* Google login */}
             <Button
               variant="outline"
-              className="w-full h-11 bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-750 hover:text-white hover:border-gray-600 transition-all font-medium"
+              className="w-full h-11 bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700 hover:text-white hover:border-gray-600 transition-all font-medium"
               onClick={handleGoogleLogin}
               disabled={googleLoading || loading}
             >
@@ -137,6 +156,10 @@ export default function LoginPage() {
                 onKeyDown={(e) => e.key === "Enter" && handleEmailLogin()}
                 className="h-11 bg-gray-800 border-gray-700 text-gray-100 placeholder:text-gray-600 focus:border-teal-500 focus:ring-teal-500/20 transition-all"
               />
+              {/* Live email format hint */}
+              {email && !email.includes("@") && (
+                <p className="text-xs text-red-400 mt-1">Enter a valid email address</p>
+              )}
             </div>
 
             {/* Password */}
@@ -145,7 +168,10 @@ export default function LoginPage() {
                 <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
                   Password
                 </label>
-                <button className="text-xs text-teal-400 hover:text-teal-300 transition-colors font-medium">
+                <button
+                  type="button"
+                  className="text-xs text-teal-400 hover:text-teal-300 transition-colors font-medium"
+                >
                   Forgot password?
                 </button>
               </div>
@@ -186,11 +212,12 @@ export default function LoginPage() {
 
             {/* Register link */}
             <p className="text-center text-sm text-gray-500">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <a href="/register" className="text-teal-400 hover:text-teal-300 font-semibold transition-colors">
                 Sign up
               </a>
             </p>
+
           </CardContent>
         </Card>
 
