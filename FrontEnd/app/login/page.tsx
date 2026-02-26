@@ -6,6 +6,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     } catch (error: any) {
-      if (error.code === "auth/popup-closed-by-user") return; // user closed popup, no toast needed
+      if (error.code === "auth/popup-closed-by-user") return;
       toast.error(error.message || "Google login failed");
     } finally {
       setGoogleLoading(false);
@@ -50,7 +51,6 @@ export default function LoginPage() {
   };
 
   const handleEmailLogin = async () => {
-    // Empty field validation
     if (!email && !password) {
       toast.error("Please enter your email and password");
       return;
@@ -63,7 +63,6 @@ export default function LoginPage() {
       toast.error("Please enter your password");
       return;
     }
-    // Basic email format check
     if (!email.includes("@") || !email.includes(".")) {
       toast.error("Please enter a valid email address");
       return;
@@ -78,13 +77,14 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     } catch (error: any) {
+      console.log("Firebase error code:", error.code);
       const messages: Record<string, string> = {
-        "auth/user-not-found":     "No account found with this email",
-        "auth/wrong-password":     "Incorrect password",
-        "auth/invalid-email":      "Invalid email format",
-        "auth/invalid-credential": "Invalid email or password",
-        "auth/user-disabled":      "This account has been disabled",
-        "auth/too-many-requests":  "Too many failed attempts. Try again later",
+        "auth/invalid-credential":     "Invalid email or password",
+        "auth/invalid-email":          "Invalid email format",
+        "auth/user-not-found":         "No account found with this email",
+        "auth/wrong-password":         "Incorrect password",
+        "auth/user-disabled":          "This account has been disabled",
+        "auth/too-many-requests":      "Too many failed attempts. Try again later",
         "auth/network-request-failed": "Network error. Check your connection",
       };
       toast.error(messages[error.code] || "Login failed. Please try again");
@@ -93,14 +93,31 @@ export default function LoginPage() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error("Enter your email first, then click Forgot password");
+      return;
+    }
+    if (!email.includes("@") || !email.includes(".")) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast.success("Password reset email sent! Check your inbox 📬");
+    } catch (error: any) {
+      const messages: Record<string, string> = {
+        "auth/user-not-found":    "No account found with this email",
+        "auth/invalid-email":     "Invalid email format",
+        "auth/too-many-requests": "Too many requests. Try again later",
+      };
+      toast.error(messages[error.code] || "Failed to send reset email");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      {/* Background glow */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-3xl" />
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-md">
 
         {/* Logo / Brand */}
         <div className="text-center mb-8">
@@ -110,10 +127,11 @@ export default function LoginPage() {
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">StudyFlow</h1>
-          <p className="text-gray-400 mt-2 text-sm">Sign in to continue to your dashboard</p>
+          <p className="text-gray-500 mt-2 text-sm">Sign in to continue to your dashboard</p>
         </div>
 
-        <Card className="bg-gray-900 border-gray-800 shadow-2xl shadow-black/50">
+        {/* Dark card */}
+        <Card className="bg-gray-900 border-gray-800 shadow-xl">
           <CardContent className="p-8 space-y-5">
 
             {/* Google login */}
@@ -156,7 +174,6 @@ export default function LoginPage() {
                 onKeyDown={(e) => e.key === "Enter" && handleEmailLogin()}
                 className="h-11 bg-gray-800 border-gray-700 text-gray-100 placeholder:text-gray-600 focus:border-teal-500 focus:ring-teal-500/20 transition-all"
               />
-              {/* Live email format hint */}
               {email && !email.includes("@") && (
                 <p className="text-xs text-red-400 mt-1">Enter a valid email address</p>
               )}
@@ -170,6 +187,7 @@ export default function LoginPage() {
                 </label>
                 <button
                   type="button"
+                  onClick={handleForgotPassword}
                   className="text-xs text-teal-400 hover:text-teal-300 transition-colors font-medium"
                 >
                   Forgot password?
@@ -196,7 +214,7 @@ export default function LoginPage() {
 
             {/* Submit */}
             <Button
-              className="w-full h-11 bg-teal-600 hover:bg-teal-500 text-white font-semibold transition-all shadow-lg shadow-teal-900/50 active:scale-[0.98] mt-2"
+              className="w-full h-11 bg-teal-600 hover:bg-teal-500 text-white font-semibold transition-all active:scale-[0.98] mt-2"
               onClick={handleEmailLogin}
               disabled={loading || googleLoading}
             >
@@ -221,7 +239,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-gray-600 mt-6">
+        <p className="text-center text-xs text-gray-400 mt-6">
           By signing in, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>
