@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/logout:
+ *   post:
+ *     summary: Log out the current user
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Successfully logged out
+ */
+
 import { NextResponse } from "next/server";
 
 export async function POST() {

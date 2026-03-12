@@ -1,3 +1,16 @@
+/**
+ * @swagger
+ * /api/session:
+ *   get:
+ *     summary: Get current session
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Session data
+ *       401:
+ *         description: Not authenticated
+ */
+
 import { adminAuth } from "@/lib/firebase-admin";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -20,3 +33,4 @@ export async function POST(req: NextRequest) {
 
   return response;
 }
+
