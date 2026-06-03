@@ -1,0 +1,148 @@
+// Prisma schema for StudyFlow productivity app
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User profile synced from Firebase Auth
+model User {
+  id            String         @id // Firebase UID
+  email         String         @unique
+  name          String?
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  tasks         Task[]
+  events        Event[]
+  sessions      StudySession[]
+  notifications Notification[]
+  settings      UserSettings?
+  aiCache       AiCache?
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// Task model with AI-assigned priority score
+model Task {
+  id            Int      @id @default(autoincrement())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  subject       String?
+  priority      Priority @default(MEDIUM)
+  aiScore       Float?
+  aiReason      String?
+  status        Status   @default(PENDING)
+  estimatedMins Int?
+  dueDate       DateTime? // stores full datetime including time
+  completedAt   DateTime?
+  progress      Int      @default(0) // 0-100 completion % updated after each study session
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum Status {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+// Calendar events (study blocks, classes, exams, etc.)
+model Event {
+  id          Int       @id @default(autoincrement())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  allDay      Boolean   @default(false)
+  color       String?
+  eventType   EventType @default(PERSONAL)
+  aiGenerated Boolean   @default(false) // true = created by AI schedule optimizer
+  taskId      Int?      // if aiGenerated, links back to the task this block is for
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum EventType {
+  CLASS
+  EXAM
+  STUDY_BLOCK
+  PERSONAL
+}
+
+// Pomodoro / study session records
+model StudySession {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject     String?
+  taskId      Int?
+  durationMin Int
+  focusScore  Float?
+  startedAt   DateTime
+  endedAt     DateTime
+  createdAt   DateTime @default(now())
+}
+
+// In-app notifications
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  type      NotifType @default(REMINDER)
+  read      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+}
+
+enum NotifType {
+  REMINDER
+  AI_ALERT
+  DEADLINE
+  ACHIEVEMENT
+}
+
+// Per-user settings (study hours, preferences)
+model UserSettings {
+  id                 Int      @id @default(autoincrement())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  preferredStartHour Int      @default(7)
+  preferredEndHour   Int      @default(23)
+  pomodoroMins       Int      @default(25)
+  shortBreakMins     Int      @default(5)
+  longBreakMins      Int      @default(15)
+  timezone           String   @default("UTC")
+  updatedAt          DateTime @updatedAt
+}
+
+// AI suggestion cache — stores last analysis per user, keyed by a hash of task state.
+// Expires after 24 hours OR when the task hash changes, ensuring consistent
+// suggestions throughout a session while refreshing when tasks actually change.
+model AiCache {
+  id             Int      @id @default(autoincrement())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskHash       String   // SHA-256 of pending task IDs + priorities + dueDates
+  prioritization Json     // cached PrioritizationResult
+  schedule       Json     // cached ScheduleResult
+  generatedAt    DateTime @default(now())
+  expiresAt      DateTime // generatedAt + 24 h
+}
