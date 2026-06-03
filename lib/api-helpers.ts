@@ -6,10 +6,15 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 // Verifies the session cookie and returns the decoded token or null
 export async function verifySession(req: NextRequest): Promise<DecodedIdToken | null> {
   const session = req.cookies.get("session")?.value;
-  if (!session) return null;
+
+  if (!session) {
+    return null;
+  }
+
   try {
-    return await adminAuth.verifyIdToken(session, true);
-  } catch {
+    return await adminAuth.verifySessionCookie(session, true);
+  } catch (error) {
+    console.error("Session verification failed:", error);
     return null;
   }
 }

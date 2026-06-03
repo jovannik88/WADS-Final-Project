@@ -1,62 +1,121 @@
-// GET and PUT handler for /api/settings
-
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { verifySession, unauthorized, badRequest, serverError, parseBody } from "@/lib/api-helpers";
-
-const settingsSchema = z.object({
-  preferredStartHour: z.number().int().min(0).max(23).optional(),
-  preferredEndHour: z.number().int().min(0).max(23).optional(),
-  pomodoroMins: z.number().int().min(5).max(120).optional(),
-  shortBreakMins: z.number().int().min(1).max(30).optional(),
-  longBreakMins: z.number().int().min(5).max(60).optional(),
-  timezone: z.string().max(50).optional(),
-});
+import { verifySession } from "@/lib/api-helpers";
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await verifySession(req);
-    if (!user) return unauthorized();
+    const session = await verifySession(req);
 
-    const settings = await prisma.userSettings.upsert({
-      where: { userId: user.uid },
-      update: {},
-      create: { userId: user.uid, updatedAt: new Date() },
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    let user = await prisma.user.findUnique({
+      where: {
+        id: session.uid,
+      },
+      include: {
+        settings: true,
+      },
     });
 
-    return NextResponse.json({ settings }, { status: 200 });
-  } catch (err) {
-    return serverError(err);
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          id: session.uid,
+          email: session.email || "",
+          name: session.name || "",
+          settings: {
+            create: {
+              timezone: "Asia/Jakarta",
+            },
+          },
+        },
+        include: {
+          settings: true,
+        },
+      });
+    }
+
+    return NextResponse.json({
+      user: {
+        ...user,
+        timezone: user.settings?.timezone || "Asia/Jakarta",
+        firebaseUid: session.uid,
+      },
+    });
+  } catch (error) {
+    console.error("GET profile error:", error);
+
+    return NextResponse.json(
+      { error: "Failed to fetch profile" },
+      { status: 500 }
+    );
   }
 }
 
 export async function PUT(req: NextRequest) {
   try {
-    const user = await verifySession(req);
-    if (!user) return unauthorized();
+    const session = await verifySession(req);
 
-    const parsed = await parseBody(req, settingsSchema);
-    if (!parsed.success) return badRequest("Invalid settings data");
-
-    const data = parsed.data;
-
-    if (
-      data.preferredStartHour !== undefined &&
-      data.preferredEndHour !== undefined &&
-      data.preferredEndHour <= data.preferredStartHour
-    ) {
-      return badRequest("preferredEndHour must be after preferredStartHour");
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    const settings = await prisma.userSettings.upsert({
-      where: { userId: user.uid },
-      update: { ...data, updatedAt: new Date() },
-      create: { userId: user.uid, ...data, updatedAt: new Date() },
+    const body = await req.json();
+
+    await prisma.user.update({
+      where: {
+        id: session.uid,
+      },
+      data: {
+        name: body.name,
+        email: body.email,
+      },
     });
 
-    return NextResponse.json({ settings }, { status: 200 });
-  } catch (err) {
-    return serverError(err);
+    await prisma.userSettings.upsert({
+      where: {
+        userId: session.uid,
+      },
+      update: {
+        timezone: body.timezone,
+      },
+      create: {
+        userId: session.uid,
+        timezone: body.timezone,
+      },
+    });
+
+    const updatedUser = await prisma.user.findUnique({
+      where: {
+        id: session.uid,
+      },
+      include: {
+        settings: true,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        ...updatedUser,
+        timezone: updatedUser?.settings?.timezone || "Asia/Jakarta",
+        firebaseUid: session.uid,
+      },
+    });
+  } catch (error) {
+    console.error("PUT profile error:", error);
+
+    return NextResponse.json(
+      { error: "Failed to update profile" },
+      { status: 500 }
+    );
   }
 }

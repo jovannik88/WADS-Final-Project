@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -269,17 +271,24 @@ export default function SettingsPage() {
     }
   };
 
-  const handleChangePassword = async () => {
-    setSaving(true);
-    try {
-      await apiFetch("/api/auth/send-reset-email", { method: "POST" });
-      toast.success("Password reset email sent — check your inbox 📬");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to send reset email");
-    } finally {
-      setSaving(false);
-    }
-  };
+const handleChangePassword = async () => {
+  console.log("BUTTON CLICKED");
+  console.log("EMAIL:", email);
+
+  setSaving(true);
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+
+    console.log("EMAIL SENT");
+    toast.success(`Password reset email sent to ${email}`);
+  } catch (err) {
+    console.error("RESET ERROR:", err);
+    toast.error("Failed");
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleExportData = async () => {
     setSaving(true);
