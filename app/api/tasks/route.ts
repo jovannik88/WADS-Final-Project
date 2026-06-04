@@ -81,19 +81,41 @@ export async function POST(req: NextRequest) {
     });
 
     // Fire deadline notification if due within 3 days
-    if (data.dueDate) {
-      const due = new Date(data.dueDate);
-      const diffDays = Math.ceil((due.getTime() - Date.now()) / 86400000);
-      if (diffDays <= 3 && diffDays >= 0) {
-        const label = diffDays === 0 ? "today" : diffDays === 1 ? "tomorrow" : `in ${diffDays} days`;
-        await createNotification(
-          user.uid,
-          `Deadline ${label}: ${task.title}`,
-          `"${task.title}" is due ${label} (${due.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}). Don't forget to add it to your study schedule.`,
-          "DEADLINE"
-        );
-      }
-    }
+// Fire deadline notification if due within 3 days
+// Fire deadline notification if due within 3 calendar days
+if (data.dueDate) {
+  const due = new Date(data.dueDate);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const dueDay = new Date(due);
+  dueDay.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.round(
+    (dueDay.getTime() - today.getTime()) / 86400000
+  );
+
+  if (diffDays <= 3 && diffDays >= 0) {
+    const label =
+      diffDays === 0
+        ? "today"
+        : diffDays === 1
+        ? "tomorrow"
+        : `in ${diffDays} days`;
+
+    await createNotification(
+      user.uid,
+      `Deadline ${label}: ${task.title}`,
+      `"${task.title}" is due ${label} (${due.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      })}). Don't forget to add it to your study schedule.`,
+      "DEADLINE"
+    );
+  }
+}
 
     return NextResponse.json({ task }, { status: 201 });
   } catch (err) {
