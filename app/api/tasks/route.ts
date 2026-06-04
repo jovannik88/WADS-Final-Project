@@ -83,7 +83,17 @@ export async function POST(req: NextRequest) {
     // Fire deadline notification if due within 3 days
 // Fire deadline notification if due within 3 days
 // Fire deadline notification if due within 3 calendar days
-if (data.dueDate) {
+// Check notification settings before creating deadline notification
+const userSettings = await prisma.userSettings.findUnique({
+  where: {
+    userId: user.uid,
+  },
+});
+
+if (
+  userSettings?.notifDeadline &&
+  data.dueDate
+) {
   const due = new Date(data.dueDate);
 
   const today = new Date();

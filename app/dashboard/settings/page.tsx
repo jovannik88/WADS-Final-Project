@@ -144,8 +144,24 @@ const [accountMeta, setAccountMeta] = useState({
   // ── Fetch all data on mount ────────────────────────────────────────────
 
   const loadData = useCallback(async () => {
+    
     setLoadingInit(true);
     try {
+      const notifRes = await apiFetch<{
+      deadlineReminders: boolean;
+      sessionReminders: boolean;
+      aiSuggestions: boolean;
+      streakAlerts: boolean;
+      weeklySummary: boolean;
+      deadlineLeadHours: number;
+    }>("/api/user/notifications");
+    console.log("NOTIFICATION DATA:", notifRes);
+      setNotifDeadline(notifRes.deadlineReminders);
+      setNotifSession(notifRes.sessionReminders);
+      setNotifAI(notifRes.aiSuggestions);
+      setNotifStreak(notifRes.streakAlerts);
+      setNotifEmail(notifRes.weeklySummary);
+setDeadlineHours(String(notifRes.deadlineLeadHours));
       // Fetch profile + settings in parallel
       const [profileRes, settingsRes] = await Promise.all([
         apiFetch<{ user: { name: string; email: string; timezone: string; createdAt: string; firebaseUid: string } }>("/api/user/profile"),
@@ -170,16 +186,19 @@ setAccountMeta({
 });
 
       // Populate settings fields
-      const s = settingsRes.settings;
-      if (s.preferredStartHour != null) {
-        setPeakStart(`${String(s.preferredStartHour).padStart(2, "0")}:00`);
-      }
-      if (s.preferredEndHour != null) {
-        setPeakEnd(`${String(s.preferredEndHour).padStart(2, "0")}:00`);
-      }
-      if (s.pomodoroMins)   setPomodoroWork(s.pomodoroMins);
-      if (s.shortBreakMins) setPomodoroBreak(s.shortBreakMins);
-      if (s.timezone)       setTimezone(s.timezone);
+const s = settingsRes?.settings;
+
+if (s) {
+  setPeakStart(`${String(s.preferredStartHour ?? 7).padStart(2, "0")}:00`);
+  setPeakEnd(`${String(s.preferredEndHour ?? 23).padStart(2, "0")}:00`);
+
+  setPomodoroWork(s.pomodoroMins ?? 25);
+  setPomodoroBreak(s.shortBreakMins ?? 5);
+
+  if (s.timezone) {
+    setTimezone(s.timezone);
+  }
+}
     } catch (err) {
       toast.error("Failed to load settings — please refresh");
       console.error(err);
@@ -236,29 +255,36 @@ setAccountMeta({
     }
   };
 
-  const handleSaveNotifications = async () => {
-    setSaving(true);
-    try {
-      // Notification prefs live in user profile or a dedicated endpoint
-      await apiFetch("/api/user/notifications", {
-        method: "PUT",
-        body: JSON.stringify({
-          notifDeadline,
-          notifSession,
-          notifAI,
-          notifStreak,
-          notifEmail,
-          deadlineLeadHours: Number(deadlineHours),
-        }),
-      });
-      toast.success("Notification settings saved");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to save notifications");
-    } finally {
-      setSaving(false);
-    }
-  };
+const handleSaveNotifications = async () => {
+  setSaving(true);
 
+  try {
+    await apiFetch("/api/user/notifications", {
+      method: "PUT",
+      body: JSON.stringify({
+        deadlineReminders: notifDeadline,
+        sessionReminders: notifSession,
+        aiSuggestions: notifAI,
+        streakAlerts: notifStreak,
+        weeklySummary: notifEmail,
+        deadlineLeadHours: Number(deadlineHours),
+      }),
+    });
+
+    toast.success("Notification settings saved");
+
+    // reload from database
+    await loadData();
+  } catch (err: unknown) {
+    toast.error(
+      err instanceof Error
+        ? err.message
+        : "Failed to save notifications"
+    );
+  } finally {
+    setSaving(false);
+  }
+};
 const handleChangePassword = async () => {
   console.log("BUTTON CLICKED");
   console.log("EMAIL:", email);
@@ -474,7 +500,6 @@ const handleExportData = async () => {
                     {[
                       { label: "Deadline reminders",  sub: "Get reminded before tasks are due",                          value: notifDeadline, onChange: setNotifDeadline },
                       { label: "Session reminders",   sub: "Notified when a scheduled study session is about to start",  value: notifSession,  onChange: setNotifSession  },
-                      { label: "AI suggestions",      sub: "Get notified when the AI updates your schedule or adds tips", value: notifAI,       onChange: setNotifAI       },
                       { label: "Study streak alerts", sub: "Celebrate milestones and warn if your streak is at risk",    value: notifStreak,   onChange: setNotifStreak   },
                     ].map((item) => (
                       <div key={item.label} className="flex items-start justify-between gap-4">
@@ -497,23 +522,7 @@ const handleExportData = async () => {
                     <Toggle value={notifEmail} onChange={setNotifEmail} />
                   </div>
 
-                  <Field label="Deadline Reminder Lead Time" hint="How far in advance to send the reminder">
-                    <div className="relative">
-                      <select
-                        value={deadlineHours}
-                        onChange={(e) => setDeadlineHours(e.target.value)}
-                        className={selectCls}
-                      >
-                        <option value="1">1 hour before</option>
-                        <option value="3">3 hours before</option>
-                        <option value="6">6 hours before</option>
-                        <option value="12">12 hours before</option>
-                        <option value="24">24 hours before</option>
-                        <option value="48">2 days before</option>
-                      </select>
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">▾</span>
-                    </div>
-                  </Field>
+                
                 </SectionCard>
 
                 <div className="flex justify-end">

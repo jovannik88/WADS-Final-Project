@@ -124,12 +124,25 @@ model UserSettings {
   id                 Int      @id @default(autoincrement())
   userId             String   @unique
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   preferredStartHour Int      @default(7)
   preferredEndHour   Int      @default(23)
+
   pomodoroMins       Int      @default(25)
   shortBreakMins     Int      @default(5)
   longBreakMins      Int      @default(15)
+
   timezone           String   @default("UTC")
+
+  // NEW
+  notifDeadline      Boolean  @default(true)
+  notifSession       Boolean  @default(true)
+  notifAI            Boolean  @default(true)
+  notifStreak        Boolean  @default(false)
+  notifWeeklySummary Boolean  @default(false)
+
+  deadlineLeadHours  Int      @default(24)
+
   updatedAt          DateTime @updatedAt
 }
 
