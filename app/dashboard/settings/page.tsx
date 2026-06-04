@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { Button } from "@/components/ui/button";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -28,29 +29,13 @@ const TIMEZONES = [
   "America/New_York", "America/Los_Angeles", "Europe/London", "UTC",
 ];
 
-const SUBJECT_OPTIONS = [
-  "Math", "English", "Physics", "Chemistry", "Biology",
-  "Computer Science", "History", "Economics", "Art", "Music",
-];
 
-const SUBJECT_COLORS: Record<string, string> = {
-  Math: "bg-blue-50 text-blue-600 ring-1 ring-blue-200",
-  English: "bg-violet-50 text-violet-600 ring-1 ring-violet-200",
-  Physics: "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200",
-  "Computer Science": "bg-teal-50 text-teal-600 ring-1 ring-teal-200",
-  Chemistry: "bg-orange-50 text-orange-600 ring-1 ring-orange-200",
-  Biology: "bg-green-50 text-green-600 ring-1 ring-green-200",
-  History: "bg-amber-50 text-amber-600 ring-1 ring-amber-200",
-  Economics: "bg-cyan-50 text-cyan-600 ring-1 ring-cyan-200",
-  Art: "bg-pink-50 text-pink-600 ring-1 ring-pink-200",
-  Music: "bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200",
-};
+
 
 type Tab = "profile" | "study" | "notifications" | "account";
 
 const tabs: { id: Tab; label: string; icon: string }[] = [
   { id: "profile",       label: "Profile",       icon: "👤" },
-  { id: "study",         label: "Study Prefs",   icon: "📚" },
   { id: "notifications", label: "Notifications", icon: "🔔" },
   { id: "account",       label: "Account",       icon: "⚙️"  },
 ];
@@ -134,7 +119,6 @@ export default function SettingsPage() {
   const [peakStart,     setPeakStart]     = useState("19:00");
   const [peakEnd,       setPeakEnd]       = useState("21:00");
   const [weeklyGoal,    setWeeklyGoal]    = useState(20);
-  const [subjects,      setSubjects]      = useState<string[]>([]);
   const [pomodoroWork,  setPomodoroWork]  = useState(25);
   const [pomodoroBreak, setPomodoroBreak] = useState(5);
   const [aiSchedule,    setAiSchedule]    = useState(true);
@@ -151,11 +135,11 @@ export default function SettingsPage() {
   // ── Account state ──
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteInput,       setDeleteInput]       = useState("");
-  const [accountMeta,       setAccountMeta]       = useState({
-    createdAt: "",
-    firebaseUid: "",
-    authProvider: "Email / Password",
-  });
+const [accountMeta, setAccountMeta] = useState({
+  createdAt: "",
+  accountStatus: "Active",
+  authProvider: "Email / Password",
+});
 
   // ── Fetch all data on mount ────────────────────────────────────────────
 
@@ -173,13 +157,17 @@ export default function SettingsPage() {
       setName(u.name ?? "");
       setEmail(u.email ?? "");
       setTimezone(u.timezone ?? "Asia/Jakarta");
-      setAccountMeta({
-        createdAt: u.createdAt
-          ? new Date(u.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
-          : "—",
-        firebaseUid: u.firebaseUid ? `uid_${u.firebaseUid.slice(0, 4)}••••••••` : "—",
-        authProvider: "Email / Password",
-      });
+setAccountMeta({
+  createdAt: u.createdAt
+    ? new Date(u.createdAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "—",
+  accountStatus: "Active",
+  authProvider: "Email / Password",
+});
 
       // Populate settings fields
       const s = settingsRes.settings;
@@ -290,17 +278,36 @@ const handleChangePassword = async () => {
   }
 };
 
-  const handleExportData = async () => {
-    setSaving(true);
-    try {
-      await apiFetch("/api/user/export", { method: "POST" });
-      toast.success("Export started — we'll email you a link shortly");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Export failed");
-    } finally {
-      setSaving(false);
+const handleExportData = async () => {
+  try {
+    const response = await fetch("/api/export");
+
+    if (!response.ok) {
+      throw new Error("Export failed");
     }
-  };
+
+    const blob = await response.blob();
+
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+
+    a.href = url;
+
+    a.download = `studyflow-data-${Date.now()}.json`;
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(error);
+    alert("Failed to export data");
+  }
+};
 
   const handleDeleteAccount = async () => {
     if (deleteInput !== "DELETE") {
@@ -321,11 +328,6 @@ const handleChangePassword = async () => {
     }
   };
 
-  const toggleSubject = (s: string) => {
-    setSubjects((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
-    );
-  };
 
   const initials = name
     .split(" ")
@@ -463,143 +465,6 @@ const handleChangePassword = async () => {
               </SectionCard>
             )}
 
-            {/* ── STUDY PREFS TAB ── */}
-            {activeTab === "study" && (
-              <>
-                <SectionCard title="Peak Study Hours" sub="AI uses this window to schedule your hardest tasks">
-                  <div className="grid grid-cols-2 gap-4 mb-2">
-                    <Field label="Start Time">
-                      <input
-                        type="time"
-                        value={peakStart}
-                        onChange={(e) => setPeakStart(e.target.value)}
-                        className={inputCls}
-                      />
-                    </Field>
-                    <Field label="End Time">
-                      <input
-                        type="time"
-                        value={peakEnd}
-                        onChange={(e) => setPeakEnd(e.target.value)}
-                        className={inputCls}
-                      />
-                    </Field>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Mapped to <code className="bg-gray-50 px-1 rounded">preferredStartHour</code> /
-                    <code className="bg-gray-50 px-1 rounded ml-1">preferredEndHour</code> in UserSettings.
-                  </p>
-                </SectionCard>
-
-                <SectionCard title="Weekly Study Goal" sub="Target hours per week for analytics tracking">
-                  <div className="flex items-center gap-5">
-                    <div className="flex-1">
-                      <input
-                        type="range" min={1} max={60} step={1}
-                        value={weeklyGoal}
-                        onChange={(e) => setWeeklyGoal(Number(e.target.value))}
-                        className="w-full h-2 rounded-full appearance-none bg-gray-200 accent-teal-600 cursor-pointer"
-                      />
-                      <div className="flex justify-between text-xs text-gray-300 mt-1.5">
-                        <span>1h</span><span>30h</span><span>60h</span>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-3xl font-bold text-gray-900">{weeklyGoal}<span className="text-lg text-gray-400">h</span></p>
-                      <p className="text-xs text-gray-400">per week</p>
-                    </div>
-                  </div>
-                </SectionCard>
-
-                <SectionCard title="Your Subjects" sub="Select all subjects you're currently studying">
-                  <div className="flex flex-wrap gap-2">
-                    {SUBJECT_OPTIONS.map((s) => {
-                      const active = subjects.includes(s);
-                      const colorCls = SUBJECT_COLORS[s] ?? "bg-gray-50 text-gray-600 ring-1 ring-gray-200";
-                      return (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => toggleSubject(s)}
-                          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                            active ? colorCls : "bg-gray-50 text-gray-400 ring-1 ring-gray-100 hover:ring-gray-200"
-                          }`}
-                        >
-                          {active && <span className="mr-1">✓</span>}
-                          {s}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </SectionCard>
-
-                <SectionCard title="Pomodoro Timer" sub="Maps to pomodoroMins / shortBreakMins in UserSettings">
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field label="Focus Duration" hint="Minutes of focused work">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setPomodoroWork(Math.max(5, pomodoroWork - 5))}
-                          className="w-9 h-9 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold transition-all flex-shrink-0"
-                        >−</button>
-                        <div className={`${inputCls} text-center font-bold flex items-center justify-center`}>
-                          {pomodoroWork} min
-                        </div>
-                        <button
-                          onClick={() => setPomodoroWork(Math.min(90, pomodoroWork + 5))}
-                          className="w-9 h-9 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold transition-all flex-shrink-0"
-                        >+</button>
-                      </div>
-                    </Field>
-                    <Field label="Break Duration" hint="Minutes of rest between sessions">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setPomodoroBreak(Math.max(1, pomodoroBreak - 1))}
-                          className="w-9 h-9 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold transition-all flex-shrink-0"
-                        >−</button>
-                        <div className={`${inputCls} text-center font-bold flex items-center justify-center`}>
-                          {pomodoroBreak} min
-                        </div>
-                        <button
-                          onClick={() => setPomodoroBreak(Math.min(30, pomodoroBreak + 1))}
-                          className="w-9 h-9 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold transition-all flex-shrink-0"
-                        >+</button>
-                      </div>
-                    </Field>
-                  </div>
-                </SectionCard>
-
-                <SectionCard title="AI Behaviour" sub="Control how the AI manages your schedule">
-                  <div className="flex flex-col gap-5">
-                    {[
-                      {
-                        label: "AI auto-scheduling",
-                        sub: "Let AI automatically assign tasks to your calendar based on deadlines and peak hours",
-                        value: aiSchedule,
-                        onChange: setAiSchedule,
-                      },
-                      {
-                        label: "Auto-start timer",
-                        sub: "Automatically start the study timer when a scheduled session begins",
-                        value: autoTimer,
-                        onChange: setAutoTimer,
-                      },
-                    ].map((item) => (
-                      <div key={item.label} className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">{item.label}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{item.sub}</p>
-                        </div>
-                        <Toggle value={item.value} onChange={item.onChange} />
-                      </div>
-                    ))}
-                  </div>
-                </SectionCard>
-
-                <div className="flex justify-end">
-                  <SaveButton onClick={handleSaveStudy} label="Save Preferences" />
-                </div>
-              </>
-            )}
 
             {/* ── NOTIFICATIONS TAB ── */}
             {activeTab === "notifications" && (
@@ -662,16 +527,30 @@ const handleChangePassword = async () => {
               <>
                 <SectionCard title="Account Info" sub="Read-only metadata from your Firebase account">
                   <div className="flex flex-col gap-3">
-                    {[
-                      { label: "Account created", value: accountMeta.createdAt },
-                      { label: "Firebase UID",    value: accountMeta.firebaseUid },
-                      { label: "Auth provider",   value: accountMeta.authProvider },
-                    ].map((row) => (
-                      <div key={row.label} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-                        <span className="text-sm text-gray-500">{row.label}</span>
-                        <span className="text-sm font-semibold text-gray-800">{row.value}</span>
-                      </div>
-                    ))}
+{[
+  { label: "Account created", value: accountMeta.createdAt },
+  { label: "Account Status", value: accountMeta.accountStatus },
+  { label: "Auth provider", value: accountMeta.authProvider },
+].map((row) => (
+  <div
+    key={row.label}
+    className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0"
+  >
+    <span className="text-sm text-gray-500">{row.label}</span>
+
+    <span
+      className={`text-sm font-semibold ${
+        row.label === "Account Status"
+          ? "text-green-600"
+          : "text-gray-800"
+      }`}
+    >
+      {row.label === "Account Status"
+        ? `✓ ${row.value}`
+        : row.value}
+    </span>
+  </div>
+))}
                   </div>
                 </SectionCard>
 
@@ -694,16 +573,13 @@ const handleChangePassword = async () => {
                   <p className="text-sm text-gray-500 mb-5">
                     Exports all data linked to your account from the Task, StudySession, and AISuggestion tables.
                   </p>
-                  <button
-                    onClick={handleExportData}
-                    disabled={saving}
-                    className="flex items-center gap-2 border border-gray-200 hover:bg-gray-50 disabled:opacity-50 active:scale-95 text-gray-700 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all"
-                  >
+                  <Button onClick={handleExportData}>
                     <span>📦</span>
                     Export Data
-                  </button>
+                  </Button>
                 </SectionCard>
-
+ 
+  
                 {/* Danger Zone */}
                 <div className="bg-red-50 rounded-3xl border border-red-100 p-7">
                   <div className="mb-5">
