@@ -42,6 +42,7 @@ export default function LoginPage() {
       toast.success("Welcome back! 🎉");
       router.push("/dashboard");
       router.refresh();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.code === "auth/popup-closed-by-user") return;
       toast.error(error.message || "Google login failed");
@@ -76,6 +77,7 @@ export default function LoginPage() {
       toast.success("Welcome back! 🎉");
       router.push("/dashboard");
       router.refresh();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log("Firebase error code:", error.code);
       const messages: Record<string, string> = {
@@ -105,6 +107,7 @@ export default function LoginPage() {
     try {
       await sendPasswordResetEmail(auth, email);
       toast.success("Password reset email sent! Check your inbox 📬");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       const messages: Record<string, string> = {
         "auth/user-not-found":    "No account found with this email",

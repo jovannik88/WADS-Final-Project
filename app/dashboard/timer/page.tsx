@@ -159,7 +159,7 @@ export default function TimerPage() {
       setProgress(s.progress ?? 0); setNote(s.note ?? "");
       setStatus("paused");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [loading]);
 
   // Save paused state on page unload/close

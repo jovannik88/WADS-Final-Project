@@ -45,6 +45,7 @@ export default function RegisterPage() {
       toast.success("Account created successfully! 🎉");
       router.push("/dashboard");
       router.refresh();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.message || "Google sign up failed");
     } finally {
@@ -83,6 +84,7 @@ export default function RegisterPage() {
       toast.success("Account created successfully! 🎉");
       router.push("/dashboard");
       router.refresh();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       const messages: Record<string, string> = {
         "auth/email-already-in-use": "An account with this email already exists",

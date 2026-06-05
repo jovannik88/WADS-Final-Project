@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
       message: "Password reset email has been sent. Please check your inbox.",
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("Send reset email error:", error);
     return NextResponse.json(
