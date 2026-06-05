@@ -37,6 +37,14 @@ const config = {
       moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
       transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
     },
+    {
+      displayName: "ai",
+      preset: "ts-jest",
+      testEnvironment: "node",
+      testMatch: ["**/tests/ai.test.ts"],
+      moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
+      transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
+    },
   ],
 };
 
