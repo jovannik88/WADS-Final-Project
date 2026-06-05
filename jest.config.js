@@ -45,6 +45,15 @@ const config = {
       moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
       transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
     },
+    {
+      displayName: "ai-consistency",
+      preset: "ts-jest",
+      testEnvironment: "node",
+      testMatch: ["**/tests/ai-consistency.test.ts"],
+      moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
+      transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
+    },
+    
   ],
 };
 
