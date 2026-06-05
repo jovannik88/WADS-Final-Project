@@ -1,19 +1,3 @@
-/**
- * AI Testing — StudyFlow
- *
- * Tests AI endpoints with valid, invalid, and edge case inputs:
- *  - /api/ai/prioritize  — task prioritization
- *  - /api/ai/schedule    — schedule optimization
- *  - /api/ai/chat        — AI assistant chat
- *  - AI engine logic     — scoring, ordering, edge cases
- *
- * Run:
- *  $env:TEST_SESSION_COOKIE="your-session-cookie"
- *  npx jest tests/ai.test.ts
- *
- * Requires: Next.js dev server running on localhost:3000
- */
-
 import {
   computePriorityScore,
   prioritizeTasks,
@@ -32,8 +16,6 @@ function authHeaders() {
     "Content-Type": "application/json",
   };
 }
-
-// ─── Mock data helpers ────────────────────────────────────────────────────────
 
 function makeTask(overrides: Partial<Task> = {}): Task {
   return {
@@ -98,9 +80,7 @@ function futureDate(daysFromNow: number): Date {
   return d;
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
 // computePriorityScore — VALID INPUTS
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("AI Engine — computePriorityScore (Valid Inputs)", () => {
 
@@ -175,9 +155,8 @@ describe("AI Engine — computePriorityScore (Valid Inputs)", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // computePriorityScore — EDGE CASES
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("AI Engine — computePriorityScore (Edge Cases)", () => {
 
@@ -221,10 +200,7 @@ describe("AI Engine — computePriorityScore (Edge Cases)", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // prioritizeTasks — VALID INPUTS
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("AI Engine — prioritizeTasks (Valid Inputs)", () => {
 
   test("returns empty result when no tasks", () => {
@@ -293,10 +269,8 @@ describe("AI Engine — prioritizeTasks (Valid Inputs)", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// prioritizeTasks — EDGE CASES
-// ═════════════════════════════════════════════════════════════════════════════
 
+// prioritizeTasks — EDGE CASES
 describe("AI Engine — prioritizeTasks (Edge Cases)", () => {
 
   test("handles single task", () => {
@@ -352,9 +326,7 @@ describe("AI Engine — prioritizeTasks (Edge Cases)", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // optimizeSchedule — VALID INPUTS
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("AI Engine — optimizeSchedule (Valid Inputs)", () => {
 
@@ -427,9 +399,8 @@ describe("AI Engine — optimizeSchedule (Valid Inputs)", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // optimizeSchedule — EDGE CASES
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("AI Engine — optimizeSchedule (Edge Cases)", () => {
 
@@ -474,9 +445,9 @@ describe("AI Engine — optimizeSchedule (Edge Cases)", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // /api/ai/prioritize — API TESTS
-// ═════════════════════════════════════════════════════════════════════════════
+
 
 describe("API — /api/ai/prioritize", () => {
 
@@ -562,10 +533,8 @@ describe("API — /api/ai/prioritize", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// /api/ai/schedule — API TESTS
-// ═════════════════════════════════════════════════════════════════════════════
 
+// /api/ai/schedule — API TESTS
 describe("API — /api/ai/schedule", () => {
 
   it("returns 401 without session cookie", async () => {
@@ -650,9 +619,8 @@ describe("API — /api/ai/schedule", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // /api/ai/chat — API TESTS
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("API — /api/ai/chat", () => {
 

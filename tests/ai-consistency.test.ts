@@ -1,21 +1,3 @@
-/**
- * AI Consistency & Expected Output Tests — StudyFlow
- *
- * Tests that AI produces:
- *  - Consistent results across multiple calls (determinism)
- *  - Expected output format and structure
- *  - Expected output values within defined ranges
- *  - Correct business logic (right task gets highest score)
- *  - Cache behavior (same input = same output)
- *  - Output stability under repeated conditions
- *
- * Run:
- *  $env:TEST_SESSION_COOKIE="your-session-cookie"
- *  npx jest tests/ai-consistency.test.ts
- *
- * Requires: Next.js dev server running on localhost:3000
- */
-
 import {
   computePriorityScore,
   computeTaskHash,
@@ -34,8 +16,6 @@ function authHeaders() {
     "Content-Type": "application/json",
   };
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeTask(overrides: Partial<Task> = {}): Task {
   return {
@@ -100,9 +80,7 @@ function futureDate(daysFromNow: number): Date {
   return d;
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
 // CONSISTENCY — computePriorityScore
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("Consistency — computePriorityScore", () => {
 
@@ -152,9 +130,8 @@ describe("Consistency — computePriorityScore", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // EXPECTED OUTPUT — computePriorityScore
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("Expected Output — computePriorityScore", () => {
 
@@ -223,9 +200,7 @@ describe("Expected Output — computePriorityScore", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // CONSISTENCY — prioritizeTasks
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("Consistency — prioritizeTasks", () => {
 
@@ -271,9 +246,8 @@ describe("Consistency — prioritizeTasks", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // EXPECTED OUTPUT — prioritizeTasks
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("Expected Output — prioritizeTasks", () => {
 
@@ -340,9 +314,8 @@ describe("Expected Output — prioritizeTasks", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // CONSISTENCY — computeTaskHash
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("Consistency — computeTaskHash", () => {
 
@@ -391,9 +364,8 @@ describe("Consistency — computeTaskHash", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // CONSISTENCY — optimizeSchedule
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("Consistency — optimizeSchedule", () => {
 
@@ -440,9 +412,8 @@ describe("Consistency — optimizeSchedule", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // EXPECTED OUTPUT — optimizeSchedule
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("Expected Output — optimizeSchedule", () => {
 
@@ -494,9 +465,9 @@ describe("Expected Output — optimizeSchedule", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // API CONSISTENCY — /api/ai/prioritize
-// ═════════════════════════════════════════════════════════════════════════════
+
 
 describe("API Consistency — /api/ai/prioritize", () => {
 
@@ -576,9 +547,8 @@ describe("API Consistency — /api/ai/prioritize", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // API CONSISTENCY — /api/ai/schedule
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("API Consistency — /api/ai/schedule", () => {
 

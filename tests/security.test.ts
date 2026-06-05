@@ -1,22 +1,3 @@
-/**
- * Security Tests — StudyFlow
- *
- * Covers:
- *  - XSS (Cross-Site Scripting) attempts
- *  - SQL / NoSQL injection attempts
- *  - Authentication testing (missing, invalid, expired tokens)
- *  - Authorization testing (accessing other users' data)
- *  - Input validation edge cases
- *  - Sensitive data exposure
- *
- * Run:
- *  $env:DATABASE_URL="postgresql://studyflow_user:study1234@localhost:5432/studyflow_test"
- *  $env:TEST_SESSION_COOKIE="your-session-cookie"
- *  npx jest tests/security.test.ts
- *
- * Requires: Next.js dev server running on localhost:3000
- */
-
 const BASE = process.env.TEST_BASE_URL ?? "http://localhost:3000";
 const SESSION_COOKIE = process.env.TEST_SESSION_COOKIE ?? "";
 
@@ -29,8 +10,6 @@ function authHeaders() {
   };
 }
 
-// ─── XSS Payloads ─────────────────────────────────────────────────────────────
-
 const XSS_PAYLOADS = [
   "<script>alert('xss')</script>",
   "<img src=x onerror=\"alert(1)\">",
@@ -41,9 +20,6 @@ const XSS_PAYLOADS = [
   "<body onload=alert('xss')>",
   "<<SCRIPT>alert('xss');//<</SCRIPT>",
 ];
-
-// ─── SQL Injection Payloads ────────────────────────────────────────────────────
-
 const SQL_INJECTION_PAYLOADS = [
   "' OR '1'='1",
   "'; DROP TABLE tasks; --",
@@ -54,22 +30,17 @@ const SQL_INJECTION_PAYLOADS = [
   "' OR 'x'='x",
   "1' AND SLEEP(5) --",
 ];
-
-// ─── NoSQL Injection Payloads ─────────────────────────────────────────────────
-
 const NOSQL_PAYLOADS = [
   '{"$gt": ""}',
   '{"$ne": null}',
   '{"$where": "sleep(1000)"}',
 ];
 
-// ═════════════════════════════════════════════════════════════════════════════
-// AUTHENTICATION TESTING
-// ═════════════════════════════════════════════════════════════════════════════
 
+// AUTHENTICATION TESTING
 describe("Security — Authentication", () => {
 
-  // ── Missing token ──────────────────────────────────────────────────────────
+  //Missing token 
 
   const PROTECTED_ROUTES = [
     { method: "GET",    path: "/api/tasks" },
@@ -131,10 +102,7 @@ describe("Security — Authentication", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // AUTHORIZATION TESTING (IDOR — Insecure Direct Object Reference)
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("Security — Authorization (IDOR)", () => {
 
   itAuth("cannot access another user's task by guessing ID", async () => {
@@ -187,10 +155,8 @@ describe("Security — Authorization (IDOR)", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// XSS TESTING
-// ═════════════════════════════════════════════════════════════════════════════
 
+// XSS TESTING
 describe("Security — XSS Prevention", () => {
 
   itAuth("XSS payload in task title is sanitized", async () => {
@@ -294,10 +260,7 @@ describe("Security — XSS Prevention", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // SQL INJECTION TESTING
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("Security — SQL Injection Prevention", () => {
 
   itAuth("SQL injection in task title does not crash server", async () => {
@@ -365,10 +328,7 @@ describe("Security — SQL Injection Prevention", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // INPUT VALIDATION EDGE CASES
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("Security — Input Validation", () => {
 
   itAuth("rejects task title that is too long", async () => {
@@ -467,10 +427,8 @@ describe("Security — Input Validation", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// SENSITIVE DATA EXPOSURE
-// ═════════════════════════════════════════════════════════════════════════════
 
+// SENSITIVE DATA EXPOSURE
 describe("Security — Sensitive Data Exposure", () => {
 
   it("error responses do not expose stack traces", async () => {
@@ -514,10 +472,7 @@ describe("Security — Sensitive Data Exposure", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// RATE LIMITING / ABUSE PREVENTION
-// ═════════════════════════════════════════════════════════════════════════════
-
+// RATE LIMITING 
 describe("Security — Abuse Prevention", () => {
 
   it("does not crash on rapid repeated requests", async () => {

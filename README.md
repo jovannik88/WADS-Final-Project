@@ -254,7 +254,176 @@ WADS-Final-Project/
 └── docker-compose.yml    # Local dev with PostgreSQL
 ```
 
+## Testing
 
+### Overview
 
+| Suite | Tests | Type | Requires Server |
+|---|---|---|---|
+| `ai-engine.test.ts` | 25 | AI engine unit | No |
+| `unit.test.ts` | 63 | API route unit | No |
+| `frontend.test.tsx` | 74 | Frontend UI | No |
+| `integration.test.ts` | 27 | API ↔ Database | Yes |
+| `security.test.ts` | 44 | Security | Yes |
+| `ai.test.ts` | 64 | AI input variations | Yes |
+| `ai-consistency.test.ts` | 70 | AI consistency & output | Yes |
+| `ai-failure.test.ts` | 51 | AI failure handling | Yes |
+| `ai-abuse.test.ts` | 50 | AI abuse & misuse | Yes |
+| **Total** | **468** | **Full stack** | |
 
+---
 
+### unit.test.ts — API Route Unit (63 tests) (BACKEND)
+
+![Backend Tests](<Test Screenshot/Backend Testing.png>)
+
+| Category | What it tests |
+|---|---|
+| `sanitizeString` | XSS stripping, whitespace trim, truncation, non-string input |
+| `verifySession` | No cookie, valid cookie, expired cookie |
+| `parseBody` | Valid body, invalid body, malformed JSON |
+| Response helpers | `unauthorized` 401, `badRequest` 400, `notFound` 404, `serverError` 500 |
+| `GET /api/tasks` | 401, 200, status filter, priority filter, DB error |
+| `POST /api/tasks` | 401, missing title, empty title, bad priority, bad date, XSS strip, deadline notification |
+| `GET/PUT/DELETE /api/tasks/[id]` | 401, 404, 400 bad id, 200, completedAt logic, AI event cleanup |
+| `POST /api/session` | No token, invalid token, valid token, Bearer header |
+| `POST /api/auth/send-reset-email` | 401, no email, success, Firebase error |
+| `GET/PUT /api/user/profile` | 401, 200, upsert on first login, DB error |
+
+---
+
+### frontend.test.tsx — Frontend UI (74 tests)
+
+![Frontend Tests](<Test Screenshot/front end.png>)
+
+| Page | What it tests |
+|---|---|
+| Login | Empty fields, invalid email, inline error, password toggle, loading state, Firebase errors, forgot password, Enter key |
+| Register | Empty name, short password, password mismatch, live feedback, email taken, loading state, redirect on success |
+| Tasks | Empty state, modal open/close, submit disabled, search filter, tab filters, success/error toasts, 401 redirect |
+| Settings | Tab switching, profile fields, delete confirmation, DELETE typing, cancel delete, save profile toast |
+| Dashboard | Loading state, empty state, stat cards, AI button, task list, 401 redirect |
+| Analytics | Range filters, error state, retry button, stat cards, 401 redirect |
+| Notifications | Unread badge, filter tabs, unread only toggle, mark all read, clear all, empty state, 401 redirect |
+
+---
+
+### integration.test.ts — API ↔ Database (27 tests)
+
+![Integration Tests](<Test Screenshot/Integration.png>)
+
+| Category | What it tests |
+|---|---|
+| Authentication | 401 without cookie on all routes, 200 with valid cookie |
+| Tasks API→DB | POST saves to DB, XSS stripped, invalid data rejected and not saved |
+| Tasks DB→API | Direct DB insert returned by API, status filter, 404 for missing |
+| Tasks Update | PUT updates DB, completedAt set/cleared correctly |
+| Tasks Delete | DELETE removes from DB, 404 for non-existent task |
+| User Profile | GET returns DB data, PUT updates DB record |
+| Notifications | DB→API returns records, PATCH marks as read in DB |
+| Settings | GET returns DB settings, PUT updates DB |
+| Events | POST saves to DB, DELETE removes from DB |
+
+---
+
+### security.test.ts — Security (44 tests)
+
+![Security Tests](<Test Screenshot/Security testing.png>)
+
+| Category | What it tests |
+|---|---|
+| Authentication | 9 protected routes blocked without cookie, fake/malformed/injected tokens all rejected |
+| Authorization (IDOR) | Cannot read/edit/delete another user's tasks, notifications, events by guessing IDs |
+| XSS Prevention | 8 XSS payloads in title/description/subject/event title all stripped or rejected |
+| SQL Injection | 8 SQL payloads in title/ID/query params — Prisma parameterized queries prevent all |
+| Input Validation | Title too long, negative minutes, invalid date/enum, empty body, malformed JSON, null values |
+| Sensitive Data | No stack traces in errors, no DB internals, no passwords in responses |
+| Abuse Prevention | 10 rapid unauthenticated + 10 authenticated requests — server stays stable |
+
+---
+
+### ai.test.ts — AI Input Variations (64 tests)
+
+![AI Tests](<Test Screenshot/AITEST.png>)
+
+| Category | What it tests |
+|---|---|
+| `computePriorityScore` valid | HIGH/MEDIUM/LOW scoring, deadline urgency, quick/long task bonuses, 0-100 range |
+| `computePriorityScore` edge | Due exactly now, 1 year away, null estimatedMins, deterministic output |
+| `prioritizeTasks` valid | Empty list, ordering, summary, timestamps, required fields |
+| `prioritizeTasks` edge | 100 tasks, all completed, identical scores, empty title |
+| `optimizeSchedule` valid | Focus blocks, breaks, endHour boundary, peak window |
+| `optimizeSchedule` edge | Null focusScore, 50 tasks, no estimatedMins, future date |
+| `/api/ai/prioritize` | 401, response shape, aiScore 0-100, caching across calls |
+| `/api/ai/schedule` | 401, valid/invalid date, empty body, block hour limits |
+| `/api/ai/chat` | 401, valid message, empty/long message, XSS, multi-turn history |
+
+---
+
+### ai-consistency.test.ts — AI Consistency & Expected Output (70 tests)
+
+![AI Consistency Tests](<Test Screenshot/ai consistency test.png>)
+
+| Category | What it tests |
+|---|---|
+| `computePriorityScore` consistency | Same task = same score 10x, urgency increases as deadline approaches |
+| `computePriorityScore` expected output | HIGH+overdue = exactly 80, quick bonus = exactly +5, long penalty = exactly -5 |
+| `prioritizeTasks` consistency | Same list = same order every time, stable across 5 repeated calls |
+| `prioritizeTasks` expected output | Urgent task always #1, overdue beats future, suggestedOrder has no gaps |
+| `computeTaskHash` consistency | Same tasks = same hash, completed tasks excluded from hash, always 24-char hex |
+| `optimizeSchedule` consistency | Same inputs = same block count and study minutes, HIGH before LOW always |
+| `optimizeSchedule` expected output | Block duration matches estimatedMins, break matches shortBreakMins |
+| `/api/ai/prioritize` consistency | 3 parallel calls = identical order, aiScores stable, all fields present |
+| `/api/ai/schedule` consistency | Blocks chronological, startHour < endHour, totalStudyMin = sum of focus blocks |
+
+---
+
+### ai-failure.test.ts — AI Failure Handling (51 tests)
+
+![AI Failure Tests](<Test Screenshot/AI-Failure Test.png>)
+
+| Category | What it tests |
+|---|---|
+| Invalid inputs (engine) | undefined priority, null dueDate, invalid dates, zero/negative/huge estimatedMins |
+| Invalid task data | null/undefined title, special chars, unicode, 10,000-char title, mixed valid/invalid |
+| Invalid schedule data | empty sessions, invalid hours, start > end, zero pomodoroMins, malformed events |
+| Malformed API requests | No body, invalid JSON, null message, wrong history format — all handled without crash |
+| Graceful degradation | AI returns valid structure even with 0 tasks, no stack traces exposed in responses |
+| Timeout & response time | Prioritize/schedule within 10s, chat within 30s, AbortController handled |
+| Boundary modes | Never returns null/NaN/Infinity/empty string from any AI function |
+
+---
+
+### ai-abuse.test.ts — AI Abuse & Misuse (50 tests)
+
+![AI Abuse Tests](<Test Screenshot/ai promp injection.png>)
+
+| Category | What it tests |
+|---|---|
+| Prompt injection (engine) | 12 injection payloads in title/description/subject — scoring and ordering unaffected |
+| Nonsensical input (engine) | 18 garbage inputs — engine never crashes, valid tasks still ranked correctly |
+| Chat prompt injection | Server responds without crashing, no system prompt revealed, no user data leaked |
+| Chat jailbreak attempts | 8 jailbreak payloads — AI behavior unchanged, server stays stable |
+| Chat nonsensical messages | Empty/whitespace/emoji/garbage messages — no crash |
+| Chat abuse patterns | Repeated identical messages, 50-turn malicious history, role manipulation — all safe |
+| Prioritize abuse | Rapid calls, unknown fields, prototype pollution — response shape always correct |
+| Schedule abuse | Extra fields ignored, extreme dates (1970/2099) handled, rapid calls stable |
+| Task creation abuse | Injection titles sanitized, nonsensical titles stored/rejected cleanly, 10 rapid creates |
+
+---
+
+### Running Tests
+
+```bash
+# No server needed
+npm test
+
+# Requires: npm run dev + valid session cookie
+$env:TEST_SESSION_COOKIE="your-session-cookie"
+npx jest tests/integration.test.ts
+npx jest tests/security.test.ts
+npx jest tests/ai.test.ts
+npx jest tests/ai-consistency.test.ts
+npx jest tests/ai-failure.test.ts
+npx jest tests/ai-abuse.test.ts
+```

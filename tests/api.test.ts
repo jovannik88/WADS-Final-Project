@@ -1,7 +1,3 @@
-// API integration tests using fetch against the running dev server
-// Run with: npx jest tests/api.test.ts (requires server running on localhost:3000)
-// Set TEST_SESSION_COOKIE env var to a valid session cookie for auth tests
-
 const BASE = process.env.TEST_BASE_URL ?? "http://localhost:3000";
 const SESSION_COOKIE = process.env.TEST_SESSION_COOKIE ?? "";
 

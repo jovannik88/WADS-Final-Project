@@ -1,22 +1,3 @@
-/**
- * Integration Tests — StudyFlow
- *
- * Tests real API → real database (studyflow_test) and database → API round trips.
- *
- * Requirements:
- *  1. studyflow_test database must exist and have schema pushed
- *  2. Next.js dev server must be running: npm run dev
- *  3. Set TEST_SESSION_COOKIE env var to a valid session cookie
- *
- * Run:
- *  $env:TEST_SESSION_COOKIE="your-cookie-value"
- *  $env:DATABASE_URL="postgresql://studyflow_user:study1234@localhost:5432/studyflow_test"
- *  npx jest tests/integration.test.ts --testEnvironment node
- *
- * Get session cookie from browser:
- *  DevTools → Application → Cookies → localhost → session
- */
-
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient({
@@ -40,12 +21,11 @@ function authHeaders() {
   };
 }
 
-// ─── Test user — created once, cleaned up after all tests ─────────────────────
+//Test user 
 
 let TEST_USER_ID: string = "";
 
-// ─── Setup & Teardown ─────────────────────────────────────────────────────────
-
+// Setup 
 beforeAll(async () => {
   if (!SESSION_COOKIE) {
     console.warn("⚠ No TEST_SESSION_COOKIE set — auth tests will be skipped");
@@ -78,9 +58,8 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // AUTH — 401 without session
-// ═════════════════════════════════════════════════════════════════════════════
+
 
 describe("Authentication", () => {
   it("returns 401 on /api/tasks without session cookie", async () => {
@@ -109,9 +88,8 @@ describe("Authentication", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // TASKS — API → DATABASE
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("Tasks — API → Database", () => {
   itAuth("POST /api/tasks saves record to database", async () => {
@@ -192,9 +170,8 @@ describe("Tasks — API → Database", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // TASKS — DATABASE → API
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("Tasks — Database → API", () => {
   itAuth("GET /api/tasks returns records inserted directly into database", async () => {
@@ -257,10 +234,8 @@ describe("Tasks — Database → API", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// TASKS — UPDATE
-// ═════════════════════════════════════════════════════════════════════════════
 
+// TASKS — UPDATE
 describe("Tasks — Update (API ↔ Database)", () => {
   itAuth("PUT /api/tasks/:id updates record in database", async () => {
     // Create via API
@@ -332,9 +307,8 @@ describe("Tasks — Update (API ↔ Database)", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // TASKS — DELETE
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("Tasks — Delete (API → Database)", () => {
   itAuth("DELETE /api/tasks/:id removes record from database", async () => {
@@ -370,10 +344,8 @@ describe("Tasks — Delete (API → Database)", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// USER PROFILE — API ↔ DATABASE
-// ═════════════════════════════════════════════════════════════════════════════
 
+// USER PROFILE — API ↔ DATABASE
 describe("User Profile — API ↔ Database", () => {
   itAuth("GET /api/user/profile returns user from database", async () => {
     const res = await fetch(`${BASE}/api/user/profile`, { headers: authHeaders() });
@@ -411,10 +383,8 @@ describe("User Profile — API ↔ Database", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// NOTIFICATIONS — API ↔ DATABASE
-// ═════════════════════════════════════════════════════════════════════════════
 
+// NOTIFICATIONS — API ↔ DATABASE
 describe("Notifications — Database → API", () => {
   itAuth("GET /api/notifications returns records from database", async () => {
     // Insert directly into database
@@ -458,10 +428,8 @@ describe("Notifications — Database → API", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// SETTINGS — API ↔ DATABASE
-// ═════════════════════════════════════════════════════════════════════════════
 
+// SETTINGS — API ↔ DATABASE
 describe("Settings — API ↔ Database", () => {
   itAuth("GET /api/settings returns settings from database", async () => {
     const res = await fetch(`${BASE}/api/settings`, { headers: authHeaders() });
@@ -496,10 +464,8 @@ describe("Settings — API ↔ Database", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// EVENTS — API ↔ DATABASE
-// ═════════════════════════════════════════════════════════════════════════════
 
+// EVENTS — API ↔ DATABASE
 describe("Events — API ↔ Database", () => {
   itAuth("POST /api/events saves event to database", async () => {
     const startTime = new Date();

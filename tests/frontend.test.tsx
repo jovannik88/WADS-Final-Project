@@ -1,28 +1,9 @@
-/**
- * Frontend Tests — StudyFlow
- *
- * Covers form validation, UI behaviour, and error handling for:
- *  - LoginPage
- *  - RegisterPage
- *  - TasksPage
- *  - SettingsPage
- *  - DashboardPage
- *  - AnalyticsPage
- *  - CalendarPage
- *  - TimerPage
- *  - AIAssistantPage
- *  - NotificationsPage
- *
- * Run: npx jest tests/frontend.test.tsx
- * Requires: @testing-library/react @testing-library/user-event @testing-library/jest-dom jest-environment-jsdom
- */
-
 import React from "react";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 
-// ─── Mock all external dependencies ──────────────────────────────────────────
+//Mock all external dependencies 
 
 // Next.js navigation
 const mockPush = jest.fn();
@@ -294,9 +275,7 @@ describe("LoginPage — form validation", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // REGISTER PAGE
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("RegisterPage — form validation", () => {
   test("renders all form fields", () => {
@@ -415,9 +394,8 @@ describe("RegisterPage — form validation", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // TASKS PAGE
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("TasksPage — form validation and UI behaviour", () => {
   beforeEach(() => {
@@ -574,10 +552,7 @@ describe("TasksPage — form validation and UI behaviour", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // SETTINGS PAGE
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("SettingsPage — form validation and UI behaviour", () => {
   const mockSettingsData = {
     notifications: { deadlineReminders: true, sessionReminders: true, aiSuggestions: true, streakAlerts: false, weeklySummary: false, deadlineLeadHours: 24 },
@@ -694,10 +669,8 @@ describe("SettingsPage — form validation and UI behaviour", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// DASHBOARD PAGE
-// ═════════════════════════════════════════════════════════════════════════════
 
+// DASHBOARD PAGE
 describe("DashboardPage — UI behaviour", () => {
   beforeEach(() => {
     mockFetch
@@ -787,10 +760,7 @@ describe("DashboardPage — UI behaviour", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // ANALYTICS PAGE
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("AnalyticsPage — UI behaviour and error handling", () => {
   const mockAnalyticsData = {
     completedTasksCount: 5,
@@ -875,10 +845,7 @@ describe("AnalyticsPage — UI behaviour and error handling", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // NOTIFICATIONS PAGE
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("NotificationsPage — UI behaviour", () => {
   const mockNotifications = [
     { id: 1, title: "Task due soon", body: "Math homework is due tomorrow", type: "DEADLINE", read: false, createdAt: new Date().toISOString() },

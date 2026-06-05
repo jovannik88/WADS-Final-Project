@@ -1,20 +1,3 @@
-/**
- * Unit Tests — StudyFlow
- *
- * Covers:
- *  - lib/api-helpers  (sanitizeString, parseBody, unauthorized, badRequest, notFound, serverError)
- *  - app/api/tasks/route        (GET, POST)
- *  - app/api/tasks/[id]/route   (GET, PUT, DELETE)
- *  - app/api/session/route      (POST)
- *  - app/api/auth/send-reset-email/route (POST)
- *  - app/api/user/profile/route (GET, PUT)
- *
- * Run:  npx jest tests/unit.test.ts
- * No running server required — all external deps are mocked.
- */
-
-// ─── Auto-mock heavy modules before any imports ───────────────────────────────
-
 jest.mock("@/lib/firebase-admin", () => ({
   adminAuth: {
     verifySessionCookie: jest.fn(),
@@ -55,7 +38,7 @@ jest.mock("@/lib/api-helpers", () => ({
   verifySession: jest.fn(),
 }));
 
-// ─── Imports ──────────────────────────────────────────────────────────────────
+//Imports 
 
 import { NextRequest } from "next/server";
 import { adminAuth } from "@/lib/firebase-admin";
@@ -85,7 +68,7 @@ import { GET as profileGET, PUT as profilePUT } from "@/app/api/user/profile/rou
 
 import { z } from "zod";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+//Helpers
 
 const mockedAdminAuth = adminAuth as jest.Mocked<typeof adminAuth>;
 const mockedPrisma = prisma as jest.Mocked<typeof prisma>;
@@ -126,16 +109,12 @@ function makeParams(id: string) {
   return { params: Promise.resolve({ id }) };
 }
 
-// ─── Reset mocks between tests ────────────────────────────────────────────────
-
+// Reset mocks between tests 
 beforeEach(() => {
   jest.clearAllMocks();
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // lib/api-helpers
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("lib/api-helpers — sanitizeString", () => {
   test("strips HTML tags", () => {
     expect(sanitizeString("<script>alert(1)</script>")).toBe("alert(1)");
@@ -254,10 +233,7 @@ describe("lib/api-helpers — verifySession", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // GET /api/tasks
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("GET /api/tasks", () => {
   test("returns 401 when not authenticated", async () => {
     mockedVerifySession.mockResolvedValueOnce(null);
@@ -318,10 +294,7 @@ describe("GET /api/tasks", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // POST /api/tasks
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("POST /api/tasks", () => {
   test("returns 401 when not authenticated", async () => {
     mockedVerifySession.mockResolvedValueOnce(null);
@@ -511,10 +484,8 @@ describe("POST /api/tasks", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// GET /api/tasks/[id]
-// ═════════════════════════════════════════════════════════════════════════════
 
+// GET /api/tasks/[id]
 describe("GET /api/tasks/[id]", () => {
   test("returns 401 when not authenticated", async () => {
     mockedVerifySession.mockResolvedValueOnce(null);
@@ -554,10 +525,8 @@ describe("GET /api/tasks/[id]", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// PUT /api/tasks/[id]
-// ═════════════════════════════════════════════════════════════════════════════
 
+// PUT /api/tasks/[id]
 describe("PUT /api/tasks/[id]", () => {
   test("returns 401 when not authenticated", async () => {
     mockedVerifySession.mockResolvedValueOnce(null);
@@ -676,10 +645,8 @@ describe("PUT /api/tasks/[id]", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// DELETE /api/tasks/[id]
-// ═════════════════════════════════════════════════════════════════════════════
 
+// DELETE /api/tasks/[id]
 describe("DELETE /api/tasks/[id]", () => {
   test("returns 401 when not authenticated", async () => {
     mockedVerifySession.mockResolvedValueOnce(null);
@@ -723,10 +690,8 @@ describe("DELETE /api/tasks/[id]", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// POST /api/session
-// ═════════════════════════════════════════════════════════════════════════════
 
+// POST /api/session
 describe("POST /api/session", () => {
   test("returns 400 when no token is provided", async () => {
     const req = makeReq("http://localhost/api/session", {
@@ -781,10 +746,7 @@ describe("POST /api/session", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // POST /api/auth/send-reset-email
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("POST /api/auth/send-reset-email", () => {
   test("returns 401 when not authenticated", async () => {
     mockedVerifySessionFromVerify.mockResolvedValueOnce(null);
@@ -833,10 +795,7 @@ describe("POST /api/auth/send-reset-email", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // GET /api/user/profile
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("GET /api/user/profile", () => {
   test("returns 401 when not authenticated", async () => {
     mockedVerifySession.mockResolvedValueOnce(null);
@@ -876,10 +835,7 @@ describe("GET /api/user/profile", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // PUT /api/user/profile
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("PUT /api/user/profile", () => {
   test("returns 401 when not authenticated", async () => {
     mockedVerifySession.mockResolvedValueOnce(null);

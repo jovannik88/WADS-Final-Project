@@ -1,11 +1,8 @@
-// Unit tests for the AI engine — no DB or network needed
-// Run with: npx jest tests/ai-engine.test.ts
-
 import { computePriorityScore, prioritizeTasks, optimizeSchedule } from "../lib/ai-engine";
 import { Priority, Status, Role } from "@prisma/client";
 import type { Task, StudySession, UserSettings } from "@prisma/client";
 
-// Helpers
+
 
 function makeTask(overrides: Partial<Task> = {}): Task {
   return {

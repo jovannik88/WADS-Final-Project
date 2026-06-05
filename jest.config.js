@@ -53,6 +53,22 @@ const config = {
       moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
       transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
     },
+    {
+      displayName: "ai-Failure",
+      preset: "ts-jest",
+      testEnvironment: "node",
+      testMatch: ["**/tests/ai-failure.test.ts"],
+      moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
+      transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
+    },
+    {
+      displayName: "ai-abuse",
+      preset: "ts-jest",
+      testEnvironment: "node",
+      testMatch: ["**/tests/ai-abuse.test.ts"],
+      moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
+      transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
+    },
     
   ],
 };
