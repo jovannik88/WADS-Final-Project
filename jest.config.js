@@ -5,8 +5,13 @@ const config = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
-  // Run unit tests by default; integration tests require a running server
-  testMatch: ["**/tests/ai-engine.test.ts"],
+  // ai-engine.test.ts = unit tests (no server needed)
+  // unit.test.ts      = unit tests for API routes (no server needed)
+  // api.test.ts       = integration tests (requires running server + TEST_SESSION_COOKIE)
+  testMatch: [
+    "**/tests/ai-engine.test.ts",
+    "**/tests/unit.test.ts",
+  ],
   transform: {
     "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }],
   },
