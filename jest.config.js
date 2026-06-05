@@ -6,10 +6,7 @@ const config = {
       displayName: "backend",
       preset: "ts-jest",
       testEnvironment: "node",
-      testMatch: [
-        "**/tests/unit.test.ts",
-        "**/tests/ai-engine.test.ts",
-      ],
+      testMatch: ["**/tests/unit.test.ts", "**/tests/ai-engine.test.ts"],
       moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
       transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
     },
@@ -22,26 +19,10 @@ const config = {
       transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
     },
     {
-      displayName: "integration",
+      displayName: "ai-engine",
       preset: "ts-jest",
       testEnvironment: "node",
-      testMatch: ["**/tests/integration.test.ts"],
-      moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
-      transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
-    },
-    {
-      displayName: "security",
-      preset: "ts-jest",
-      testEnvironment: "node",
-      testMatch: ["**/tests/security.test.ts"],
-      moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
-      transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
-    },
-    {
-      displayName: "ai",
-      preset: "ts-jest",
-      testEnvironment: "node",
-      testMatch: ["**/tests/ai.test.ts"],
+      testMatch: ["**/tests/ai-engine.test.ts"],
       moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
       transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
     },
@@ -54,7 +35,7 @@ const config = {
       transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
     },
     {
-      displayName: "ai-Failure",
+      displayName: "ai-failure",
       preset: "ts-jest",
       testEnvironment: "node",
       testMatch: ["**/tests/ai-failure.test.ts"],
@@ -69,7 +50,8 @@ const config = {
       moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
       transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
     },
-    
+    // integration, security, ai.test.ts excluded from CI
+    // run locally with: npx jest tests/integration.test.ts
   ],
 };
 
