@@ -29,6 +29,14 @@ const config = {
       moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
       transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
     },
+    {
+      displayName: "security",
+      preset: "ts-jest",
+      testEnvironment: "node",
+      testMatch: ["**/tests/security.test.ts"],
+      moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
+      transform: { "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
+    },
   ],
 };
 
