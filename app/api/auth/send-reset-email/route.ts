@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase-admin";
+import { getAdminAuth } from "@/lib/firebase-admin";
 import { verifySession } from "@/app/api/user/verify";
 
 export async function POST(req: NextRequest) {
@@ -11,14 +11,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Get Firebase user details
-    const firebaseUser = await adminAuth.getUser(user.uid);
+    const firebaseUser = await getAdminAuth().getUser(user.uid);
 
     if (!firebaseUser.email) {
       return NextResponse.json({ error: "No email address found" }, { status: 400 });
     }
 
     // Generate & send password reset email via Firebase
-    await adminAuth.generatePasswordResetLink(firebaseUser.email, {
+    await getAdminAuth().generatePasswordResetLink(firebaseUser.email, {
       url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001"}/login`,
       handleCodeInApp: true,
     });

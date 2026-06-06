@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase-admin";
+import { getAdminAuth } from "@/lib/firebase-admin";
 import { z } from "zod";
 import type { DecodedIdToken } from "firebase-admin/auth";
 
@@ -12,7 +12,7 @@ export async function verifySession(req: NextRequest): Promise<DecodedIdToken | 
   }
 
   try {
-    return await adminAuth.verifySessionCookie(session, true);
+    return await getAdminAuth().verifySessionCookie(session, true);
   } catch (error) {
     console.error("Session verification failed:", error);
     return null;

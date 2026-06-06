@@ -1,4 +1,4 @@
-import { adminAuth } from "@/lib/firebase-admin";
+import { getAdminAuth } from "@/lib/firebase-admin";
 import { NextRequest } from "next/server";
 
 export async function verifySession(req: NextRequest) {
@@ -6,7 +6,7 @@ export async function verifySession(req: NextRequest) {
     const sessionCookie = req.cookies.get("session")?.value;
     
     if (sessionCookie) {
-      const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
+      const decodedToken = await getAdminAuth().verifySessionCookie(sessionCookie, true);
       return decodedToken;
     }
 

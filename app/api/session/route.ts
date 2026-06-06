@@ -1,4 +1,4 @@
-import { adminAuth } from "@/lib/firebase-admin";
+import { getAdminAuth } from "@/lib/firebase-admin";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -20,11 +20,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify ID Token
-    const decodedToken = await adminAuth.verifyIdToken(idToken, true);
+    const decodedToken = await getAdminAuth().verifyIdToken(idToken, true);
 
     // Create proper Firebase Session Cookie
     const expiresIn = 60 * 60 * 24 * 14 * 1000; // 14 days
-    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
+    const sessionCookie = await getAdminAuth().createSessionCookie(idToken, { expiresIn });
 
     const response = NextResponse.json({ 
       success: true,
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     });
 
     return response;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("Session creation error:", error);
     return NextResponse.json({ 
