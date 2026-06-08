@@ -46,7 +46,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v2
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -55,7 +55,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Push Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           push: true
@@ -85,31 +85,20 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create .env.production from GitHub Secrets
-        # This file is only created on the runner machine during deploy.
-        # Store FIREBASE_PRIVATE_KEY in GitHub Secrets with real newlines.
         run: |
           cat > .env.production <<EOF
-          # Server
           NODE_ENV=${{ secrets.NODE_ENV }}
           NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
-
-          # Neon PostgreSQL
           DATABASE_URL=${{ secrets.DATABASE_URL }}
-
-          # Firebase public
           NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
           NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
           NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
           NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
           NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-
-          # Firebase server
           FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
           FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
-
-          # Gemini AI
           GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
           EOF
 
@@ -123,15 +112,15 @@ jobs:
         run: docker pull ${{ secrets.DOCKER_USERNAME }}/studyflow:latest
 
       - name: Build DB migration image (local target)
-        run: docker compose --profile migrate build --pull db-migrate
+        run: docker compose --env-file .env.production --profile migrate build --pull db-migrate
 
       - name: Run DB Migration
-        run: docker compose --profile migrate run --rm db-migrate
+        run: docker compose --env-file .env.production --profile migrate run --rm db-migrate
 
       - name: Deploy StudyFlow app
         run: |
-          docker compose pull app
-          docker compose up -d --no-deps app
+          docker compose --env-file .env.production pull app
+          docker compose --env-file .env.production up -d --no-deps app
 
       - name: Remove temporary env file
         if: always()
