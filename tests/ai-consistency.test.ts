@@ -1,21 +1,3 @@
-/**
- * AI Consistency & Expected Output Tests — StudyFlow
- *
- * Tests that AI produces:
- *  - Consistent results across multiple calls (determinism)
- *  - Expected output format and structure
- *  - Expected output values within defined ranges
- *  - Correct business logic (right task gets highest score)
- *  - Cache behavior (same input = same output)
- *  - Output stability under repeated conditions
- *
- * Run:
- *  $env:TEST_SESSION_COOKIE="your-session-cookie"
- *  npx jest tests/ai-consistency.test.ts
- *
- * Requires: Next.js dev server running on localhost:3000
- */
-
 import {
   computePriorityScore,
   computeTaskHash,
@@ -36,7 +18,7 @@ function authHeaders() {
   };
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+//Helpers 
 
 function makeTask(overrides: Partial<Task> = {}): Task {
   return {
@@ -101,10 +83,7 @@ function futureDate(daysFromNow: number): Date {
   return d;
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
 // CONSISTENCY — computePriorityScore
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("Consistency — computePriorityScore", () => {
 
   test("same task produces same score on repeated calls", () => {
@@ -153,10 +132,7 @@ describe("Consistency — computePriorityScore", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // EXPECTED OUTPUT — computePriorityScore
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("Expected Output — computePriorityScore", () => {
 
   test("HIGH priority overdue task outputs score of exactly 80", () => {
@@ -224,10 +200,8 @@ describe("Expected Output — computePriorityScore", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// CONSISTENCY — prioritizeTasks
-// ═════════════════════════════════════════════════════════════════════════════
 
+// CONSISTENCY — prioritizeTasks
 describe("Consistency — prioritizeTasks", () => {
 
   test("same task list always produces same ordering", () => {
@@ -272,10 +246,7 @@ describe("Consistency — prioritizeTasks", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // EXPECTED OUTPUT — prioritizeTasks
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("Expected Output — prioritizeTasks", () => {
 
   test("urgent HIGH priority task is always ranked #1", () => {
@@ -341,10 +312,7 @@ describe("Expected Output — prioritizeTasks", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
 // CONSISTENCY — computeTaskHash
-// ═════════════════════════════════════════════════════════════════════════════
-
 describe("Consistency — computeTaskHash", () => {
 
   test("same tasks produce same hash", () => {
@@ -392,10 +360,8 @@ describe("Consistency — computeTaskHash", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// CONSISTENCY — optimizeSchedule
-// ═════════════════════════════════════════════════════════════════════════════
 
+// CONSISTENCY — optimizeSchedule
 describe("Consistency — optimizeSchedule", () => {
 
   test("same inputs always produce same number of blocks", () => {
@@ -441,9 +407,8 @@ describe("Consistency — optimizeSchedule", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // EXPECTED OUTPUT — optimizeSchedule
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("Expected Output — optimizeSchedule", () => {
 
@@ -495,10 +460,8 @@ describe("Expected Output — optimizeSchedule", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
-// API CONSISTENCY — /api/ai/prioritize
-// ═════════════════════════════════════════════════════════════════════════════
 
+// API CONSISTENCY — /api/ai/prioritize
 describe("API Consistency — /api/ai/prioritize", () => {
 
   itAuth("returns same task order on 3 consecutive calls (cache)", async () => {
@@ -577,9 +540,8 @@ describe("API Consistency — /api/ai/prioritize", () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════════════
+
 // API CONSISTENCY — /api/ai/schedule
-// ═════════════════════════════════════════════════════════════════════════════
 
 describe("API Consistency — /api/ai/schedule", () => {
 

@@ -59,6 +59,9 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
           tags: ${{ secrets.DOCKER_USERNAME }}/studyflow:latest
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/studyflow:latest
           cache-to: type=inline
