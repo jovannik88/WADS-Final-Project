@@ -44,7 +44,6 @@ FROM base AS migrator
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY prisma ./prisma
-ENV DATABASE_URL=postgresql://migrate:migrate@127.0.0.1:5432/migrate?sslmode=disable
 RUN npx prisma generate
 CMD ["npx", "prisma", "migrate", "deploy"]
 
