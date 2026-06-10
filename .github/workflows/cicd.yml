@@ -86,8 +86,6 @@ jobs:
 
       - name: Create .env.production from GitHub Secrets
         run: |
-          cat > .env.production << 'EOF'
-          EOF
           printf 'NODE_ENV=%s\n' '${{ secrets.NODE_ENV }}' > .env.production
           printf 'NEXT_PUBLIC_APP_URL=%s\n' '${{ secrets.NEXT_PUBLIC_APP_URL }}' >> .env.production
           printf 'DATABASE_URL=%s\n' '${{ secrets.DATABASE_URL }}' >> .env.production
@@ -118,7 +116,10 @@ jobs:
         run: docker compose --env-file .env.production --profile migrate build --no-cache db-migrate
 
       - name: Run DB Migration
-        run: docker compose --env-file .env.production --profile migrate run --rm db-migrate
+        run: |
+          docker compose --profile migrate run \
+            -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+            --rm db-migrate
 
       - name: Deploy StudyFlow app
         run: |
