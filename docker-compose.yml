@@ -16,6 +16,12 @@ services:
         NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
     env_file:
       - .env.production
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
     ports:
       - "3015:3015"
     restart: unless-stopped
@@ -28,4 +34,6 @@ services:
       target: migrator
     env_file:
       - .env.production
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
     restart: "no"
