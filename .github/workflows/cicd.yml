@@ -116,7 +116,9 @@ jobs:
         run: docker compose --env-file .env.production --profile migrate build --no-cache db-migrate
 
       - name: Run DB Migration
-        run: docker compose --profile migrate run --rm -e DATABASE_URL=${{ secrets.DATABASE_URL }} db-migrate 
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: docker compose --profile migrate run --rm -e DATABASE_URL db-migrate
 
       - name: Deploy StudyFlow app
         run: |
