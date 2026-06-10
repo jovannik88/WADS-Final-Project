@@ -84,3 +84,138 @@ services:
 
 volumes:
   pgdata:
+
+
+
+cicd.yaml
+
+name: StudyFlow CI/CD
+
+on:
+  push:
+    branches: [master, main]
+    paths-ignore:
+      - "README.md"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' }}
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma generate
+        env:
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci?sslmode=disable
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+  build:
+    needs: quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
+          tags: ${{ secrets.DOCKER_USERNAME }}/studyflow:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/studyflow:latest
+          cache-to: type=inline
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+            NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+            NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+            NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create .env.production from GitHub Secrets
+        run: |
+          cat > .env.production <<EOF
+          NODE_ENV=${{ secrets.NODE_ENV }}
+          NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          EOF
+
+      - name: Login to Docker Hub (pull)
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Pull Latest Image
+        run: docker pull ${{ secrets.DOCKER_USERNAME }}/studyflow:latest
+
+      - name: Build DB migration image (local target)
+        run: docker compose --env-file .env.production --profile migrate build --pull db-migrate
+
+      - name: Run DB Migration
+        run: docker compose --env-file .env.production --profile migrate run --rm db-migrate
+
+      - name: Deploy StudyFlow app
+        run: |
+          docker compose --env-file .env.production pull app
+          docker compose --env-file .env.production up -d --no-deps app
+
+      - name: Remove temporary env file
+        if: always()
+        run: rm -f .env.production
+
+      - name: Cleanup dangling images
+        run: docker image prune -f
