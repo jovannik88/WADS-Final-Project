@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import { AiSyncProvider } from "@/lib/ai-sync-context";
@@ -10,9 +10,7 @@ function NotificationBell() {
 
   const poll = useCallback(async () => {
     try {
-      // Check for new session-based notifications
       await fetch("/api/notifications/check-sessions", { method: "POST" });
-      // Fetch unread count
       const res = await fetch("/api/notifications?unread=true");
       if (res.ok) {
         const data = await res.json();
@@ -23,7 +21,6 @@ function NotificationBell() {
 
   useEffect(() => {
     poll();
-    // Poll every 5 minutes
     const interval = setInterval(poll, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [poll]);
@@ -48,6 +45,44 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // ── Auto-hide top bar on scroll down, show on scroll up ──
+  const [navVisible, setNavVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const current = window.scrollY;
+      if (current < 10) {
+        setNavVisible(true);
+      } else if (current > lastScrollY.current + 4) {
+        setNavVisible(false); // scrolling down
+      } else if (current < lastScrollY.current - 4) {
+        setNavVisible(true);  // scrolling up
+      }
+      lastScrollY.current = current;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // ── Swipe right from left edge to open sidebar ──
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+    // Swipe right, starting within 40px of left edge, at least 60px horizontal, more horizontal than vertical
+    if (touchStartX.current < 40 && dx > 60 && dy < 120) {
+      setMobileOpen(true);
+    }
+  }, []);
+
   return (
     <AiSyncProvider>
       <div className="flex min-h-screen">
@@ -58,8 +93,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           onMobileClose={() => setMobileOpen(false)}
         />
 
-        <main className={`flex-1 bg-gray-50 transition-all duration-300 ease-in-out ${collapsed ? "md:ml-16" : "md:ml-64"}`}>
-          <div className="bg-gray-900 text-white px-4 py-3 text-sm font-medium flex items-center gap-3">
+        <main
+          className={`flex-1 bg-gray-50 transition-all duration-300 ease-in-out ${collapsed ? "md:ml-16" : "md:ml-64"}`}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          {/* Top bar — sticky, auto-hides on scroll down */}
+          <div className={`sticky top-0 z-20 bg-gray-900 text-white px-4 py-3 text-sm font-medium flex items-center gap-3 transition-transform duration-300 md:translate-y-0 ${navVisible ? "translate-y-0" : "-translate-y-full"}`}>
             <button className="md:hidden text-gray-400 hover:text-white text-xl" onClick={() => setMobileOpen(true)}>
               ☰
             </button>
@@ -74,3 +114,4 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </AiSyncProvider>
   );
 }
+
