@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -70,20 +70,15 @@ function greeting() {
   return "Good evening";
 }
 
-function hashTasks(tasks: Task[]): string {
-  return tasks.map((t) => `${t.id}:${t.status}:${t.priority}`).join(",");
-}
-
 export default function DashboardPage() {
   const router = useRouter();
-  const { prioritized, scheduleBlocks, analysedAt, refreshing: loadingAI, notifyChange } = useAiSync();
+  const { prioritized, scheduleBlocks, analysedAt, refreshing: loadingAI, refreshFromDB } = useAiSync();
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [userName, setUserName] = useState("there");
   const [loadingData, setLoadingData] = useState(true);
   const [mounted, setMounted] = useState(false);
-  const autoRanRef = useRef(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -115,30 +110,13 @@ export default function DashboardPage() {
     }
   }, [router]);
 
-  // On mount: fetch tasks/analytics, auto-run AI if no results yet or tasks changed
+  // On mount: load current AI state from DB (read-only, no generation)
   useEffect(() => {
-    fetchData().then((freshTasks) => {
-      const tasks = (freshTasks ?? []) as Task[];
-      const noResults = prioritized.length === 0 && scheduleBlocks.length === 0;
-      const hashChanged = hashTasks(tasks) !== hashTasks(prioritized.map(p => tasks.find(t => t.id === p.taskId)).filter(Boolean) as Task[]);
-      if ((noResults || hashChanged) && !autoRanRef.current) {
-        autoRanRef.current = true;
-        notifyChange("tasks");
-      }
-    });
+    fetchData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-fetch tasks after AI refresh so AI scores reflect in the list
-  const prevLoadingAI = useRef(false);
-  useEffect(() => {
-    if (prevLoadingAI.current && !loadingAI) {
-      fetchData();
-    }
-    prevLoadingAI.current = loadingAI;
-  }, [loadingAI, fetchData]);
 
-  // Map AI scores back onto task list for ordering
   const orderedTasks = [...tasks].sort((a, b) => {
     const scoreA = prioritized.find((p) => p.taskId === a.id)?.aiScore ?? (a.aiScore ?? 0);
     const scoreB = prioritized.find((p) => p.taskId === b.id)?.aiScore ?? (b.aiScore ?? 0);
@@ -174,7 +152,7 @@ export default function DashboardPage() {
             )}
             <button
               id="run-ai-btn"
-              onClick={() => notifyChange("tasks")}
+              onClick={refreshFromDB}
               disabled={loadingAI}
               className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white px-5 py-2.5 rounded-2xl font-semibold text-sm shadow-lg shadow-teal-100 transition-all active:scale-[0.97]"
             >

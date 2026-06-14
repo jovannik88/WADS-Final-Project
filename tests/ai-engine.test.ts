@@ -150,7 +150,7 @@ describe("prioritizeTasks", () => {
     expect(() => new Date(result.generatedAt)).not.toThrow();
   });
 
-  // Edge case: all tasks have same priority and no deadline — order should be deterministic
+  // Edge case: all tasks have same priority and no deadline, order should be deterministic
   test("deterministic output for identical tasks", () => {
     const tasks = [1, 2, 3].map((id) => makeTask({ id, priority: Priority.MEDIUM, dueDate: null }));
     const r1 = prioritizeTasks(tasks);

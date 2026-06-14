@@ -6,7 +6,7 @@ import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// Types
 
 interface UserProfile {
   name: string;
@@ -22,7 +22,7 @@ interface UserSettings {
   timezone: string;
 }
 
-// ── Constants ──────────────────────────────────────────────────────────────
+// Constants
 
 const TIMEZONES = [
   "Asia/Jakarta", "Asia/Singapore", "Asia/Tokyo",
@@ -40,7 +40,7 @@ const tabs: { id: Tab; label: string; icon: string }[] = [
   { id: "account",       label: "Account",       icon: "⚙️"  },
 ];
 
-// ── Shared UI components ───────────────────────────────────────────────────
+// Shared UI components
 
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -89,7 +89,7 @@ function Skeleton({ className }: { className?: string }) {
 const inputCls = "h-11 w-full border border-gray-200 rounded-2xl px-4 text-sm text-gray-900 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all";
 const selectCls = "h-11 w-full border border-gray-200 rounded-2xl px-4 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all appearance-none";
 
-// ── API helpers ────────────────────────────────────────────────────────────
+// API helpers
 
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -103,19 +103,19 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-// ── Main component ─────────────────────────────────────────────────────────
+// Main component
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
   const [loadingInit, setLoadingInit] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // ── Profile state ──
+  // Profile state
   const [name,     setName]     = useState("");
   const [email,    setEmail]    = useState("");
   const [timezone, setTimezone] = useState("Asia/Jakarta");
 
-  // ── Study prefs state ──
+  // Study prefs state
   const [peakStart,     setPeakStart]     = useState("19:00");
   const [peakEnd,       setPeakEnd]       = useState("21:00");
   const [weeklyGoal,    setWeeklyGoal]    = useState(20);
@@ -124,7 +124,7 @@ export default function SettingsPage() {
   const [aiSchedule,    setAiSchedule]    = useState(true);
   const [autoTimer,     setAutoTimer]     = useState(false);
 
-  // ── Notification state ──
+  // Notification state
   const [notifDeadline, setNotifDeadline] = useState(true);
   const [notifSession,  setNotifSession]  = useState(true);
   const [notifAI,       setNotifAI]       = useState(true);
@@ -132,7 +132,7 @@ export default function SettingsPage() {
   const [notifEmail,    setNotifEmail]    = useState(false);
   const [deadlineHours, setDeadlineHours] = useState("24");
 
-  // ── Account state ──
+  // Account state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteInput,       setDeleteInput]       = useState("");
 const [accountMeta, setAccountMeta] = useState({
@@ -141,7 +141,7 @@ const [accountMeta, setAccountMeta] = useState({
   authProvider: "Email / Password",
 });
 
-  // ── Fetch all data on mount ────────────────────────────────────────────
+  // Fetch all data on mount
 
   const loadData = useCallback(async () => {
     
@@ -209,7 +209,7 @@ if (s) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // ── Save handlers ─────────────────────────────────────────────────────
+  // Save handlers
 
   const handleSaveProfile = async () => {
     setSaving(true);
@@ -375,7 +375,7 @@ const handleExportData = async () => {
     </button>
   );
 
-  // ── Loading skeleton ───────────────────────────────────────────────────
+  // Loading skeleton
 
   if (loadingInit) {
     return (
@@ -397,7 +397,7 @@ const handleExportData = async () => {
     );
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────
+  // Render
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -434,7 +434,7 @@ const handleExportData = async () => {
           {/* Tab content */}
           <div className="flex-1 flex flex-col gap-5 min-w-0">
 
-            {/* ── PROFILE TAB ── */}
+            {/* PROFILE TAB */}
             {activeTab === "profile" && (
               <SectionCard title="Your Profile" sub="Name, email address, and timezone">
                 <div className="flex items-center gap-5 mb-7 pb-7 border-b border-gray-100">
@@ -492,7 +492,7 @@ const handleExportData = async () => {
             )}
 
 
-            {/* ── NOTIFICATIONS TAB ── */}
+            {/* NOTIFICATIONS TAB */}
             {activeTab === "notifications" && (
               <>
                 <SectionCard title="Push Notifications" sub="Control which in-app alerts you receive">
@@ -531,7 +531,7 @@ const handleExportData = async () => {
               </>
             )}
 
-            {/* ── ACCOUNT TAB ── */}
+            {/* ACCOUNT TAB */}
             {activeTab === "account" && (
               <>
                 <SectionCard title="Account Info" sub="Read-only metadata from your Firebase account">

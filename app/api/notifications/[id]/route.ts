@@ -1,5 +1,5 @@
-// PATCH /api/notifications/[id] — mark single notification as read
-// DELETE /api/notifications/[id] — delete single notification
+// PATCH /api/notifications/[id]: mark single notification as read
+// DELETE /api/notifications/[id]: delete single notification
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";

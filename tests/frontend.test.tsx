@@ -103,7 +103,7 @@ import DashboardPage from "@/app/dashboard/page";
 import AnalyticsPage from "@/app/dashboard/analytics/page";
 import NotificationsPage from "@/app/dashboard/notifications/page";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// Helpers
 
 const user = userEvent.setup();
 
@@ -864,7 +864,7 @@ describe("NotificationsPage — UI behaviour", () => {
     mockFetchOk({ notifications: mockNotifications, unreadCount: 1 });
     render(<NotificationsPage />);
     await waitFor(() => {
-      // Multiple elements show "1" (header badge + tab badge) — check at least one exists
+      // Multiple elements show "1" (header badge + tab badge): check at least one exists
       expect(screen.getAllByText("1").length).toBeGreaterThan(0);
     });
   });
@@ -883,7 +883,7 @@ describe("NotificationsPage — UI behaviour", () => {
     render(<NotificationsPage />);
     await waitFor(() => screen.getByText("Notifications"));
     expect(screen.getByText("All")).toBeInTheDocument();
-    // "Deadlines" appears in multiple places (chip + tab + notification badge) — check the tab button
+    // "Deadlines" appears in multiple places (chip + tab + notification badge): check the tab button
     expect(screen.getAllByText("Deadlines").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Sessions").length).toBeGreaterThan(0);
   });

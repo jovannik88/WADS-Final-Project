@@ -1,4 +1,4 @@
-// POST handler for /api/logout — clears the session cookie
+// POST handler for /api/logout: clears the session cookie
 
 import { NextResponse } from "next/server";
 

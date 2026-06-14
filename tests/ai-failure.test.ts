@@ -62,7 +62,7 @@ function makeSettings(overrides: Partial<UserSettings> = {}): UserSettings {
 }
 
 
-// AI ENGINE — Failure Handling (No Network Required)
+// AI ENGINE: Failure Handling (No Network Required)
 
 
 describe("AI Engine — Failure Handling: Invalid Inputs", () => {
@@ -210,7 +210,7 @@ describe("AI Engine — Failure Handling: Invalid Inputs", () => {
   });
 });
 
-// API — Failure Handling: Malformed Request Bodies
+// API: Failure Handling: Malformed Request Bodies
 
 describe("API Failure Handling — Malformed Request Bodies", () => {
 
@@ -294,7 +294,7 @@ describe("API Failure Handling — Malformed Request Bodies", () => {
 });
 
 
-// API — Failure Handling: Graceful Degradation
+// API: Failure Handling: Graceful Degradation
 
 describe("API Failure Handling — Graceful Degradation", () => {
 
@@ -338,7 +338,7 @@ describe("API Failure Handling — Graceful Degradation", () => {
       body: JSON.stringify({ message: "Hello", history: [] }),
     });
 
-    // Should return 200 with a message OR error codes — never hang
+    // Should return 200 with a message OR error codes, never hang
     expect([200, 400, 401, 429, 500, 503]).toContain(res.status);
 
     if (res.status === 200) {
@@ -388,13 +388,13 @@ describe("API Failure Handling — Graceful Degradation", () => {
       expect(typeof data.response).toBe("string");
       expect(data.response.length).toBeGreaterThan(0);
     }
-    // If not 200, AI service is unavailable — acceptable
+    // If not 200, AI service is unavailable: acceptable
     expect([200, 401, 429, 500, 503]).toContain(res.status);
   });
 });
 
 
-// API — Failure Handling: Timeout Simulation
+// API: Failure Handling: Timeout Simulation
 
 describe("API Failure Handling — Timeout & Response Time", () => {
 
@@ -446,7 +446,7 @@ describe("API Failure Handling — Timeout & Response Time", () => {
       expect([200, 400, 401, 500]).toContain(res.status);
     } catch (err: any) {
       clearTimeout(timeoutId);
-      // AbortError = timed out, other errors = network/auth issues — both acceptable
+      // AbortError = timed out, other errors = network/auth issues: both acceptable
       expect(["AbortError", "Error", "TypeError"]).toContain(err.name);
     }
   });
@@ -466,7 +466,7 @@ describe("API Failure Handling — Timeout & Response Time", () => {
 });
 
 
-// AI ENGINE — Boundary & Failure Modes
+// AI ENGINE: Boundary and Failure Modes
 
 describe("AI Engine — Boundary & Failure Modes", () => {
 

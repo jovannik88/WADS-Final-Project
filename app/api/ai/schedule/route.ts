@@ -6,6 +6,63 @@ import { optimizeSchedule } from "@/lib/ai-engine";
 import { Status, EventType } from "@prisma/client";
 import type { ScheduleBlock } from "@/lib/ai-engine";
 
+// GET: read current AI schedule from DB without regenerating
+export async function GET(req: NextRequest) {
+  try {
+    const user = await verifySession(req);
+    if (!user) return unauthorized();
+
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const dayStart = new Date(today); dayStart.setHours(0, 0, 0, 0);
+    const dayEnd   = new Date(today); dayEnd.setHours(23, 59, 59, 999);
+    const tmrStart = new Date(tomorrow); tmrStart.setHours(0, 0, 0, 0);
+    const tmrEnd   = new Date(tomorrow); tmrEnd.setHours(23, 59, 59, 999);
+
+    // Fetch today's AI blocks first, fall back to tomorrow if none
+    let aiEvents = await prisma.event.findMany({
+      where: { userId: user.uid, aiGenerated: true, eventType: EventType.STUDY_BLOCK, startTime: { gte: dayStart, lte: dayEnd } },
+      orderBy: { startTime: "asc" },
+    });
+    const forTomorrow = aiEvents.length === 0;
+    if (forTomorrow) {
+      aiEvents = await prisma.event.findMany({
+        where: { userId: user.uid, aiGenerated: true, eventType: EventType.STUDY_BLOCK, startTime: { gte: tmrStart, lte: tmrEnd } },
+        orderBy: { startTime: "asc" },
+      });
+    }
+
+    // Convert DB events → ScheduleBlock format for the frontend
+    const blocks: ScheduleBlock[] = aiEvents.map(ev => {
+      const start = new Date(ev.startTime);
+      const end   = new Date(ev.endTime);
+      const startHour = start.getHours() + start.getMinutes() / 60;
+      const endHour   = end.getHours()   + end.getMinutes()   / 60;
+      return {
+        startHour,
+        endHour,
+        taskTitle: ev.title,
+        blockType: "focus" as const,
+        durationMin: Math.round((end.getTime() - start.getTime()) / 60000),
+        taskId: ev.taskId ?? undefined,
+        reason: ev.description ?? undefined,
+      };
+    });
+
+    const totalStudyMin = blocks.reduce((s, b) => s + b.durationMin, 0);
+    return NextResponse.json({
+      blocks,
+      totalStudyMin,
+      forTomorrow,
+      summary: blocks.length === 0 ? "No AI study blocks scheduled." : `${blocks.length} study block${blocks.length > 1 ? "s" : ""} · ${totalStudyMin} min total`,
+    }, { status: 200 });
+  } catch (err) {
+    return serverError(err);
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const user = await verifySession(req);

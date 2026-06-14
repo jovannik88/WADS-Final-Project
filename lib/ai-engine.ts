@@ -222,7 +222,7 @@ export function optimizeSchedule(
     }));
 
   // Find the first free slot at or after `from` that fits `duration` minutes.
-  // A slot is blocked only if its END overlaps a blocked range's end — i.e. the event hasn't finished yet.
+  // A slot is blocked only if its END overlaps a blocked range's end (i.e. the event hasn't finished yet).
   const nextFree = (from: number, duration: number): number => {
     let cur = from;
     for (let guard = 0; guard < 200; guard++) {

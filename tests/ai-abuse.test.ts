@@ -146,7 +146,7 @@ describe("AI Engine — Prompt Injection in Task Data", () => {
       makeTask({ id: 3, title: "Actual High Task", priority: "HIGH" }),
     ];
     const result = prioritizeTasks(tasks);
-    // Injection task (id:2) should NOT be ranked #1 — the actual HIGH priority task should be
+    // Injection task (id:2) should NOT be ranked #1: the actual HIGH priority task should be
     expect(result.prioritized[0].taskId).toBe(3);
   });
 
@@ -177,7 +177,7 @@ describe("AI Engine — Prompt Injection in Task Data", () => {
 });
 
 
-// AI ENGINE — Nonsensical Input
+// AI ENGINE: Nonsensical Input
 
 
 describe("AI Engine — Nonsensical Input", () => {
@@ -244,7 +244,7 @@ describe("AI Engine — Nonsensical Input", () => {
   });
 });
 
-// /api/ai/chat — Prompt Injection Attempts
+// /api/ai/chat: Prompt Injection Attempts
 
 describe("API /api/ai/chat — Prompt Injection Attempts", () => {
 
@@ -255,7 +255,7 @@ describe("API /api/ai/chat — Prompt Injection Attempts", () => {
         headers: authHeaders(),
         body: JSON.stringify({ message: payload, history: [] }),
       });
-      // Must respond — never hang or crash
+      // Must respond: never hang or crash
       expect([200, 400, 401, 429, 500, 503]).toContain(res.status);
     }
   });
@@ -272,7 +272,7 @@ describe("API /api/ai/chat — Prompt Injection Attempts", () => {
     expect([200, 400, 401, 429, 500, 503]).toContain(res.status);
     if (res.status === 200) {
       const data = await res.json();
-      // Response must be a string — should not contain raw system instructions
+      // Response must be a string: should not contain raw system instructions
       expect(typeof data.response).toBe("string");
       // Should not contain database credentials
       expect(data.response).not.toContain("DATABASE_URL");
@@ -387,7 +387,7 @@ describe("API /api/ai/chat — Prompt Injection Attempts", () => {
   });
 });
 
-// /api/ai/prioritize — Abuse Attempts
+// /api/ai/prioritize: Abuse Attempts
 describe("API /api/ai/prioritize — Abuse Attempts", () => {
 
   itAuth("does not crash when called rapidly 5 times", async () => {
@@ -442,7 +442,7 @@ describe("API /api/ai/prioritize — Abuse Attempts", () => {
 });
 
 
-// /api/ai/schedule — Abuse Attempt
+// /api/ai/schedule: Abuse Attempt
 
 describe("API /api/ai/schedule — Abuse Attempts", () => {
 
@@ -501,7 +501,7 @@ describe("API /api/ai/schedule — Abuse Attempts", () => {
 });
 
 
-// TASK CREATION — Abuse via Task Data
+// TASK CREATION: Abuse via Task Data
 
 describe("API /api/tasks — Abuse via Task Data", () => {
 
@@ -533,7 +533,7 @@ describe("API /api/tasks — Abuse via Task Data", () => {
         headers: authHeaders(),
         body: JSON.stringify({ title: payload }),
       });
-      // Must not crash — either accepts or rejects cleanly
+      // Must not crash: either accepts or rejects cleanly
       expect([200, 201, 400, 401, 500]).toContain(res.status);
       if (res.status === 201) {
         const data = await res.json();

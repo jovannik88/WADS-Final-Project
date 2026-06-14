@@ -77,14 +77,14 @@ const mockedCreateNotification = createNotification as jest.Mock;
 const mockedVerifySessionFromVerify = verifySessionFromVerify as jest.Mock;
 const mockedVerifySession = verifySession as jest.Mock;
 
-/** Decoded token returned for an authenticated user */
+// Decoded token returned for an authenticated user
 const MOCK_USER = {
   uid: "user-123",
   email: "test@example.com",
   name: "Test User",
 } as any;
 
-/** Build a minimal NextRequest */
+// Build a minimal NextRequest
 function makeReq(
   url: string,
   options: {
@@ -105,7 +105,7 @@ function makeReq(
   });
 }
 
-/** Params wrapper expected by [id] route handlers */
+// Params wrapper expected by [id] route handlers
 function makeParams(id: string) {
   return { params: Promise.resolve({ id }) };
 }

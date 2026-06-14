@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAiSync } from "@/lib/ai-sync-context";
 
 interface ChatMessage {
   id: number;
@@ -67,9 +68,10 @@ interface SessionSnapshot {
 
 export default function AIAssistantPage() {
   const router = useRouter();
+  const { timerRunning, scheduleExpired, refreshFromDB } = useAiSync();
   const [uid, setUid] = useState<string | null>(null);
 
-  // SSR-safe defaults — sessionStorage is loaded after mount to avoid hydration mismatch
+  // SSR-safe defaults: sessionStorage is loaded after mount to avoid hydration mismatch
   const [messages, setMessages] = useState<ChatMessage[]>([makeInitialMessage()]);
   const [geminiHistory, setGeminiHistory] = useState<GeminiTurn[]>([]);
   const [input, setInput] = useState("");
@@ -105,7 +107,7 @@ export default function AIAssistantPage() {
       setShowPanel(snap.showPanel ?? null);
       setPanelCollapsed(snap.panelCollapsed ?? false);
     } else {
-      // New account or fresh session — start clean
+      // New account or fresh session, start clean
       setMessages([makeInitialMessage()]);
       setGeminiHistory([]);
       setPrioritized([]);
@@ -127,7 +129,7 @@ export default function AIAssistantPage() {
       showPanel,
       panelCollapsed,
     };
-    try { sessionStorage.setItem(sessionKey(uid), JSON.stringify(snap)); } catch { /* quota exceeded */ }
+    try { sessionStorage.setItem(sessionKey(uid), JSON.stringify(snap)); } catch { return; }
   }, [hydrated, uid, messages, geminiHistory, prioritized, schedule, showPanel, panelCollapsed]);
 
   useEffect(() => {
@@ -148,7 +150,7 @@ export default function AIAssistantPage() {
     setMessages((prev) => [...prev, { id: Date.now(), role, content, timestamp: new Date() }]);
   };
 
-  // Send a message to Gemini via /api/ai/chat — multi-turn conversation preserved via history
+  // Send a message to Gemini via /api/ai/chat, multi-turn conversation preserved via history
   const sendToGemini = useCallback(async (userText: string, historyOverride?: GeminiTurn[]) => {
     setIsLoading(true);
     const history = historyOverride ?? geminiHistory;
@@ -231,15 +233,19 @@ export default function AIAssistantPage() {
 
   const runSchedule = useCallback(async () => {
     setIsLoading(true);
-    addMessage("user", "Optimize my study schedule for today.");
+    addMessage("user", "Show me my current AI study schedule.");
     try {
-      const res = await fetch("/api/ai/schedule", { method: "POST" });
+      // READ-ONLY: fetch what is already saved in DB (no regeneration)
+      const res = await fetch("/api/ai/schedule", { method: "GET" });
       if (res.status === 401) { router.push("/login"); return; }
       if (!res.ok) throw new Error();
       const data = await res.json();
       setSchedule(data.blocks ?? []);
       setShowPanel("schedule");
       setPanelCollapsed(false);
+
+      // Also sync the global context display (still read-only)
+      refreshFromDB();
 
       const focusBlocks: ScheduleBlock[] = (data.blocks ?? []).filter((b: ScheduleBlock) => b.blockType === "focus");
       const forTomorrow: boolean = data.forTomorrow ?? false;
@@ -258,22 +264,22 @@ export default function AIAssistantPage() {
         : "";
 
       const responseText = detail
-        ? `**${dayLabel}:**\n${detail}\n\nPeak window: **${data.peakWindow}**\n${data.summary}`
-        : data.summary;
+        ? `**${dayLabel}:**\n${detail}\n\nTotal study time: **${data.totalStudyMin} min**\n${data.summary}`
+        : (data.summary || "No AI study blocks scheduled yet. Add tasks and the AI will automatically generate a schedule.");
       addMessage("assistant", responseText);
 
       const newTurn: GeminiTurn[] = [
-        { role: "user", parts: [{ text: "Optimize my study schedule for today." }] },
+        { role: "user", parts: [{ text: "Show me my current AI study schedule." }] },
         { role: "model", parts: [{ text: responseText }] },
       ];
       setGeminiHistory((prev) => [...prev, ...newTurn]);
     } catch {
-      toast.error("Schedule optimization failed");
-      addMessage("assistant", "Couldn't build your schedule. Please try again.");
+      toast.error("Failed to load schedule");
+      addMessage("assistant", "Couldn't load your schedule. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [router, refreshFromDB]);
 
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();

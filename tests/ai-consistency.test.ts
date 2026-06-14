@@ -83,7 +83,7 @@ function futureDate(daysFromNow: number): Date {
   return d;
 }
 
-// CONSISTENCY — computePriorityScore
+// CONSISTENCY: computePriorityScore
 describe("Consistency — computePriorityScore", () => {
 
   test("same task produces same score on repeated calls", () => {
@@ -132,7 +132,7 @@ describe("Consistency — computePriorityScore", () => {
   });
 });
 
-// EXPECTED OUTPUT — computePriorityScore
+// EXPECTED OUTPUT: computePriorityScore
 describe("Expected Output — computePriorityScore", () => {
 
   test("HIGH priority overdue task outputs score of exactly 80", () => {
@@ -180,7 +180,7 @@ describe("Expected Output — computePriorityScore", () => {
   });
 
   test("score is clamped to maximum 100", () => {
-    // HIGH(40) + overdue(40) + quick(5) = 85 — well below 100
+    // HIGH(40) + overdue(40) + quick(5) = 85, well below 100
     // Create a scenario that would exceed 100 without clamping
     const task = makeTask({
       priority: "HIGH",
@@ -195,13 +195,13 @@ describe("Expected Output — computePriorityScore", () => {
   test("score is clamped to minimum 0", () => {
     const task = makeTask({ priority: "LOW", dueDate: null, estimatedMins: 200 });
     const score = computePriorityScore(task);
-    // LOW(5) + no deadline(5) - long(-5) = 5 — already > 0
+    // LOW(5) + no deadline(5) - long(-5) = 5, already > 0
     expect(score).toBeGreaterThanOrEqual(0);
   });
 });
 
 
-// CONSISTENCY — prioritizeTasks
+// CONSISTENCY: prioritizeTasks
 describe("Consistency — prioritizeTasks", () => {
 
   test("same task list always produces same ordering", () => {
@@ -246,7 +246,7 @@ describe("Consistency — prioritizeTasks", () => {
   });
 });
 
-// EXPECTED OUTPUT — prioritizeTasks
+// EXPECTED OUTPUT: prioritizeTasks
 describe("Expected Output — prioritizeTasks", () => {
 
   test("urgent HIGH priority task is always ranked #1", () => {
@@ -312,7 +312,7 @@ describe("Expected Output — prioritizeTasks", () => {
   });
 });
 
-// CONSISTENCY — computeTaskHash
+// CONSISTENCY: computeTaskHash
 describe("Consistency — computeTaskHash", () => {
 
   test("same tasks produce same hash", () => {
@@ -361,7 +361,7 @@ describe("Consistency — computeTaskHash", () => {
 });
 
 
-// CONSISTENCY — optimizeSchedule
+// CONSISTENCY: optimizeSchedule
 describe("Consistency — optimizeSchedule", () => {
 
   test("same inputs always produce same number of blocks", () => {
@@ -408,7 +408,7 @@ describe("Consistency — optimizeSchedule", () => {
 });
 
 
-// EXPECTED OUTPUT — optimizeSchedule
+// EXPECTED OUTPUT: optimizeSchedule
 
 describe("Expected Output — optimizeSchedule", () => {
 
@@ -461,7 +461,7 @@ describe("Expected Output — optimizeSchedule", () => {
 });
 
 
-// API CONSISTENCY — /api/ai/prioritize
+// API CONSISTENCY: /api/ai/prioritize
 describe("API Consistency — /api/ai/prioritize", () => {
 
   itAuth("returns same task order on 3 consecutive calls (cache)", async () => {
@@ -541,7 +541,7 @@ describe("API Consistency — /api/ai/prioritize", () => {
 });
 
 
-// API CONSISTENCY — /api/ai/schedule
+// API CONSISTENCY: /api/ai/schedule
 
 describe("API Consistency — /api/ai/schedule", () => {
 

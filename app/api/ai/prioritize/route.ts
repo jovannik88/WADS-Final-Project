@@ -4,6 +4,37 @@ import { verifySession, unauthorized, serverError } from "@/lib/api-helpers";
 import { getOrGenerateAiSuggestions } from "@/lib/ai-cache";
 import { Status } from "@prisma/client";
 
+// GET: read cached prioritization from DB without regenerating
+export async function GET(req: NextRequest) {
+  try {
+    const user = await verifySession(req);
+    if (!user) return unauthorized();
+
+    // Try AiCache first
+    const cache = await prisma.aiCache.findUnique({ where: { userId: user.uid } });
+    if (cache && new Date() < cache.expiresAt) {
+      const p = cache.prioritization as any;
+      return NextResponse.json({ ...p, fromCache: true }, { status: 200 });
+    }
+
+    // Fall back to per-task aiScore/aiReason fields
+    const tasks = await prisma.task.findMany({
+      where: { userId: user.uid, status: { not: Status.COMPLETED }, aiScore: { not: null } },
+      orderBy: { aiScore: "desc" },
+    });
+    const prioritized = tasks.map((t, i) => ({
+      taskId: t.id,
+      title: t.title,
+      aiScore: t.aiScore ?? 0,
+      aiReason: t.aiReason ?? "No analysis yet",
+      suggestedOrder: i + 1,
+    }));
+    return NextResponse.json({ prioritized, summary: "", fromCache: true }, { status: 200 });
+  } catch (err) {
+    return serverError(err);
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const user = await verifySession(req);

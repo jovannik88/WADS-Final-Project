@@ -1,4 +1,4 @@
-// GET handler for /api/analytics — returns all productivity stats for the analytics dashboard
+// GET handler for /api/analytics: returns all productivity stats for the analytics dashboard
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       prisma.task.count({ where: { userId: user.uid, status: Status.COMPLETED, completedAt: { gte: prevSince, lt: since } } }),
     ]);
 
-    // ── Stat Cards ─────────────────────────────────────────────────────────
+    // Stat cards
     const completedTasks = allTasks.filter(t => t.status === Status.COMPLETED);
     const completedInPeriod = allTasks.filter(t =>
       t.status === Status.COMPLETED && t.completedAt && t.completedAt >= since
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 
     const subjects = [...new Set(allTasks.map(t => t.subject).filter(Boolean))];
 
-    // ── Daily Study Hours (bar chart) ───────────────────────────────────────
+    // Daily study hours (bar chart)
     const dailyMap: Record<string, number> = {};
     for (let i = 0; i < Math.min(days, 30); i++) {
       const d = new Date(Date.now() - i * 86400000);
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
         hours: parseFloat((mins / 60).toFixed(2)),
       }));
 
-    // ── Subject Breakdown (pie) ─────────────────────────────────────────────
+    // Subject breakdown (pie)
     const COLORS = ["#3b82f6","#8b5cf6","#10b981","#0d9488","#f59e0b","#ef4444","#6366f1","#ec4899"];
     const subjectMinMap: Record<string, number> = {};
     sessions.forEach(s => {
@@ -83,14 +83,14 @@ export async function GET(req: NextRequest) {
         color: COLORS[i % COLORS.length],
       }));
 
-    // ── Tasks by Priority ───────────────────────────────────────────────────
+    // Tasks by priority
     const tasksByPriority = ([Priority.HIGH, Priority.MEDIUM, Priority.LOW] as Priority[]).map(p => ({
       priority: p.charAt(0) + p.slice(1).toLowerCase(),
       completed: allTasks.filter(t => t.priority === p && t.status === Status.COMPLETED).length,
       pending: allTasks.filter(t => t.priority === p && t.status !== Status.COMPLETED).length,
     }));
 
-    // ── Scheduled vs Actual Duration (by subject) ──────────────────────────
+    // Scheduled vs actual duration (by subject)
     const scheduledMap: Record<string, number[]> = {};
     const actualMap: Record<string, number[]> = {};
     allTasks.forEach(t => {
@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
         : 0,
     })).filter(r => r.scheduled > 0 || r.actual > 0);
 
-    // ── Peak Study Hours ────────────────────────────────────────────────────
+    // Peak study hours
     const hourCount: Record<number, number> = {};
     sessions.forEach(s => {
       const h = new Date(s.startedAt).getHours();
@@ -129,7 +129,7 @@ export async function GET(req: NextRequest) {
       sessions: hourCount[h] ?? 0,
     })).filter((_, h) => h >= 6); // show 6AM onward
 
-    // ── Study Streak ────────────────────────────────────────────────────────
+    // Study streak
     const allSessions = await prisma.studySession.findMany({
       where: { userId: user.uid },
       select: { startedAt: true },
@@ -144,7 +144,7 @@ export async function GET(req: NextRequest) {
       else if (i > 0) break;
     }
 
-    // ── AI Summary Stats ────────────────────────────────────────────────────
+    // AI summary stats
     // Peak focus window: find the 2-hour window with most sessions
     const peakHour = Object.entries(hourCount).sort(([,a],[,b]) => b - a)[0]?.[0];
     const peakFocusWindow = peakHour

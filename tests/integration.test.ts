@@ -58,7 +58,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-// AUTH — 401 without session
+// AUTH: 401 without session
 
 
 describe("Authentication", () => {
@@ -89,7 +89,7 @@ describe("Authentication", () => {
 });
 
 
-// TASKS — API → DATABASE
+// TASKS: API to DATABASE
 
 describe("Tasks — API → Database", () => {
   itAuth("POST /api/tasks saves record to database", async () => {
@@ -171,7 +171,7 @@ describe("Tasks — API → Database", () => {
 });
 
 
-// TASKS — DATABASE → API
+// TASKS: DATABASE to API
 
 describe("Tasks — Database → API", () => {
   itAuth("GET /api/tasks returns records inserted directly into database", async () => {
@@ -235,7 +235,7 @@ describe("Tasks — Database → API", () => {
 });
 
 
-// TASKS — UPDATE
+// TASKS: UPDATE
 describe("Tasks — Update (API ↔ Database)", () => {
   itAuth("PUT /api/tasks/:id updates record in database", async () => {
     // Create via API
@@ -308,7 +308,7 @@ describe("Tasks — Update (API ↔ Database)", () => {
 });
 
 
-// TASKS — DELETE
+// TASKS: DELETE
 
 describe("Tasks — Delete (API → Database)", () => {
   itAuth("DELETE /api/tasks/:id removes record from database", async () => {
@@ -345,7 +345,7 @@ describe("Tasks — Delete (API → Database)", () => {
 });
 
 
-// USER PROFILE — API ↔ DATABASE
+// USER PROFILE: API and DATABASE
 describe("User Profile — API ↔ Database", () => {
   itAuth("GET /api/user/profile returns user from database", async () => {
     const res = await fetch(`${BASE}/api/user/profile`, { headers: authHeaders() });
@@ -384,7 +384,7 @@ describe("User Profile — API ↔ Database", () => {
 });
 
 
-// NOTIFICATIONS — API ↔ DATABASE
+// NOTIFICATIONS: API and DATABASE
 describe("Notifications — Database → API", () => {
   itAuth("GET /api/notifications returns records from database", async () => {
     // Insert directly into database
@@ -429,13 +429,13 @@ describe("Notifications — Database → API", () => {
 });
 
 
-// SETTINGS — API ↔ DATABASE
+// SETTINGS: API and DATABASE
 describe("Settings — API ↔ Database", () => {
   itAuth("GET /api/settings returns settings from database", async () => {
     const res = await fetch(`${BASE}/api/settings`, { headers: authHeaders() });
     expect(res.status).toBe(200);
     const data = await res.json();
-    // Settings may be nested under different key — check both
+    // Settings may be nested under different key, check both
     const settings = data.settings ?? data;
     expect(settings).toBeDefined();
     expect(typeof (settings.pomodoroMins ?? settings.pomodoro_mins ?? 25)).toBe("number");
@@ -459,13 +459,13 @@ describe("Settings — API ↔ Database", () => {
     const putData = await res.json();
     // PUT response shape: { success: true, user: { settings: { ... } } }
     expect(putData.success).toBe(true);
-    // The API accepted the update — verify response acknowledges it
+    // The API accepted the update, verify response acknowledges it
     expect(res.status).toBe(200);
   });
 });
 
 
-// EVENTS — API ↔ DATABASE
+// EVENTS: API and DATABASE
 describe("Events — API ↔ Database", () => {
   itAuth("POST /api/events saves event to database", async () => {
     const startTime = new Date();

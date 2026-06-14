@@ -1,4 +1,4 @@
-// PATCH handler for /api/notifications/read-all — marks all notifications as read
+// PATCH handler for /api/notifications/read-all: marks all notifications as read
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";

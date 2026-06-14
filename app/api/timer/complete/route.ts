@@ -236,7 +236,7 @@ If suggestReschedule is false, omit the "reschedule" key entirely.`;
         }
       }
     } catch (aiErr) {
-      // AI failure is non-fatal — session is already saved
+      // AI failure is non-fatal: session is already saved
       console.error("[timer/complete] Gemini error:", aiErr);
     }
 

@@ -83,7 +83,7 @@ export default function LandingPage() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#080d12] text-white">
-      {/* ── Background ── */}
+      {/* Background */}
       <div
         className="pointer-events-none fixed inset-0 z-0 opacity-[0.04]"
         style={{
@@ -101,7 +101,7 @@ export default function LandingPage() {
         style={{ background: "radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%)" }}
       />
 
-      {/* ── Navbar ── */}
+      {/* Navbar */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
@@ -197,7 +197,7 @@ export default function LandingPage() {
         )}
       </nav>
 
-      {/* ── Hero ── */}
+      {/* Hero */}
       <section className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 pt-36 sm:pt-44 pb-16 sm:pb-24 text-center">
         <div
           className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[12px] sm:text-[13px] mb-8 sm:mb-10 border transition-all cursor-default"
@@ -235,7 +235,7 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        {/* Stats bar — 2x2 on mobile, 4-col on desktop */}
+        {/* Stats bar: 2x2 on mobile, 4-col on desktop */}
         <div className="grid grid-cols-2 sm:grid-cols-4 overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-md divide-y sm:divide-y-0 divide-x divide-white/[0.07]">
           {[
             { value: "50K+", label: "Active Students" },
@@ -251,7 +251,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Dashboard Mockup ── */}
+      {/* Dashboard Mockup */}
       <section className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 pb-20 sm:pb-28">
         <div
           className="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 w-[70%] h-24"
@@ -270,9 +270,9 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* App mockup — scrollable on mobile */}
+          {/* App mockup, scrollable on mobile */}
           <div className="flex h-[340px] sm:h-[400px] bg-[#f8fafc] overflow-x-auto">
-            {/* Sidebar — hidden on very small screens */}
+            {/* Sidebar, hidden on very small screens */}
             <div className="hidden sm:flex w-[190px] shrink-0 bg-[#0a1220] border-r border-white/[0.06] flex-col py-5">
               <div className="flex items-center gap-2 px-4 pb-4 mb-2 border-b border-white/[0.06]">
                 <div className="h-6 w-6 rounded-md shrink-0" style={{ background: "linear-gradient(135deg, #14b8a6, #0d9488)" }} />
@@ -357,7 +357,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Features ── */}
+      {/* Features */}
       <section id="features" className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 pb-20 sm:pb-28 text-center scroll-mt-24">
         <p className="text-[11px] font-semibold tracking-[2px] uppercase text-[#14b8a6] mb-4">Everything you need</p>
         <h2 className="text-[clamp(26px,5vw,50px)] font-extrabold tracking-tight mb-4">Built for serious students</h2>
@@ -384,7 +384,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
+      {/* Testimonials */}
       <section id="reviews" className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 pb-20 sm:pb-28 text-center scroll-mt-24">
         <p className="text-[11px] font-semibold tracking-[2px] uppercase text-[#14b8a6] mb-4">Student love</p>
         <h2 className="text-[clamp(26px,5vw,50px)] font-extrabold tracking-tight mb-10 sm:mb-14">Real students. Real results.</h2>
@@ -407,7 +407,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Pricing ── */}
+      {/* Pricing */}
       <section id="pricing" className="relative z-10 mx-auto max-w-3xl px-4 sm:px-6 pb-20 sm:pb-28 text-center scroll-mt-24">
         <p className="text-[11px] font-semibold tracking-[2px] uppercase text-[#14b8a6] mb-4">Simple pricing</p>
         <h2 className="text-[clamp(26px,5vw,50px)] font-extrabold tracking-tight mb-10 sm:mb-14">Start free, scale when ready</h2>
@@ -454,7 +454,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
+      {/* CTA */}
       <section className="relative z-10 mx-auto max-w-2xl px-4 sm:px-6 pb-20 sm:pb-28 text-center">
         <div className="relative overflow-hidden rounded-3xl border p-10 sm:p-14" style={{ background: "#111b27", borderColor: "rgba(20,184,166,0.22)" }}>
           <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(20,184,166,0.12), transparent 70%)" }} />
@@ -480,7 +480,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Footer ── */}
+      {/* Footer */}
       <footer className="relative z-10 border-t border-white/[0.06] py-8 px-4 sm:px-6">
         <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center sm:justify-between gap-4 text-center sm:text-left">
           <div className="flex items-center gap-2">

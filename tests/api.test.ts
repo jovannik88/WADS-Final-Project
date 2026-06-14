@@ -98,7 +98,7 @@ describe("POST /api/tasks", () => {
       headers: authHeaders(),
       body: JSON.stringify({ title: "'; DROP TABLE tasks; --" }),
     });
-    // Must not crash — Prisma uses parameterised queries
+    // Must not crash: Prisma uses parameterised queries
     expect([201, 400]).toContain(res.status);
   });
 });
@@ -200,7 +200,7 @@ describe("POST /api/ai/schedule", () => {
       headers: authHeaders(),
       body: JSON.stringify({ targetDate: "not-a-date" }),
     });
-    // Should still respond — defaults to today
+    // Should still respond: defaults to today
     expect([200, 400]).toContain(res.status);
   });
 });

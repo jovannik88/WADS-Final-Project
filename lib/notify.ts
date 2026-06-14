@@ -15,7 +15,7 @@ export async function createNotification(
       data: { userId, title, body, type },
     });
   } catch {
-    // Non-fatal — never let notification failure break the main action
+    // Non-fatal: never let notification failure break the main action
     return null;
   }
 }

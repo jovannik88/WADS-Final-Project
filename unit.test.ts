@@ -1,19 +1,17 @@
-/**
- * Unit Tests — StudyFlow
- *
- * Covers:
- *  - lib/api-helpers  (sanitizeString, parseBody, unauthorized, badRequest, notFound, serverError)
- *  - app/api/tasks/route        (GET, POST)
- *  - app/api/tasks/[id]/route   (GET, PUT, DELETE)
- *  - app/api/session/route      (POST)
- *  - app/api/auth/send-reset-email/route (POST)
- *  - app/api/user/profile/route (GET, PUT)
- *
- * Run:  npx jest tests/unit.test.ts
- * No running server required — all external deps are mocked.
- */
+// Unit Tests: StudyFlow
+//
+// Covers:
+//  - lib/api-helpers  (sanitizeString, parseBody, unauthorized, badRequest, notFound, serverError)
+//  - app/api/tasks/route        (GET, POST)
+//  - app/api/tasks/[id]/route   (GET, PUT, DELETE)
+//  - app/api/session/route      (POST)
+//  - app/api/auth/send-reset-email/route (POST)
+//  - app/api/user/profile/route (GET, PUT)
+//
+// Run:  npx jest tests/unit.test.ts
+// No running server required: all external deps are mocked.
 
-// ─── Auto-mock heavy modules before any imports ───────────────────────────────
+// Auto-mock heavy modules before any imports
 
 jest.mock("@/lib/firebase-admin", () => ({
   adminAuth: {
@@ -49,7 +47,7 @@ jest.mock("@/app/api/user/verify", () => ({
   verifySession: jest.fn(),
 }));
 
-// ─── Imports ──────────────────────────────────────────────────────────────────
+// Imports
 
 import { NextRequest } from "next/server";
 import { adminAuth } from "@/lib/firebase-admin";
@@ -79,21 +77,21 @@ import { GET as profileGET, PUT as profilePUT } from "@/app/api/user/profile/rou
 
 import { z } from "zod";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// Helpers
 
 const mockedAdminAuth = adminAuth as jest.Mocked<typeof adminAuth>;
 const mockedPrisma = prisma as jest.Mocked<typeof prisma>;
 const mockedCreateNotification = createNotification as jest.Mock;
 const mockedVerifySessionFromVerify = verifySessionFromVerify as jest.Mock;
 
-/** Decoded token returned for an authenticated user */
+// Decoded token returned for an authenticated user
 const MOCK_USER = {
   uid: "user-123",
   email: "test@example.com",
   name: "Test User",
 } as any;
 
-/** Build a minimal NextRequest */
+// Build a minimal NextRequest
 function makeReq(
   url: string,
   options: {
@@ -114,12 +112,12 @@ function makeReq(
   });
 }
 
-/** Params wrapper expected by [id] route handlers */
+// Params wrapper expected by [id] route handlers
 function makeParams(id: string) {
   return { params: Promise.resolve({ id }) };
 }
 
-// ─── Reset mocks between tests ────────────────────────────────────────────────
+// Reset mocks between tests
 
 beforeEach(() => {
   jest.clearAllMocks();

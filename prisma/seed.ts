@@ -4,7 +4,7 @@ import { Priority, Status, EventType, NotifType, Role } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // Seed a demo user (mirrors a real Firebase UID — replace with yours)
+  // Seed a demo user (mirrors a real Firebase UID: replace with yours)
   const demoUid = "demo-user-seed-001";
 
   await prisma.user.upsert({

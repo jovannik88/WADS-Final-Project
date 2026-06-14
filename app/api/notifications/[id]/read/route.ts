@@ -1,4 +1,4 @@
-// PATCH handler for /api/notifications/[id]/read — marks a single notification as read
+// PATCH handler for /api/notifications/[id]/read: marks a single notification as read
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";

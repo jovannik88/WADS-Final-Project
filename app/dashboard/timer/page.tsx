@@ -141,7 +141,7 @@ export default function TimerPage() {
       const rec = Math.floor((Date.now() - s.wallStart) / 1000);
       const tot = s.totalSecs ?? 0;
       if (rec >= tot) {
-        // Session window passed while away — show completion modal
+        // Session window passed while away, show completion modal
         setElapsed(tot); setTotal(tot);
         if (s.sessionStart) setSessionStart(new Date(s.sessionStart));
         setProgress(s.progress ?? 0); setNote(s.note ?? "");
@@ -189,7 +189,7 @@ export default function TimerPage() {
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [status, total]);
 
-  // Idle tick — forces a re-render every second so the remaining-time countdown moves
+  // Idle tick: forces a re-render every second so the remaining-time countdown moves
   const [, setIdleTick] = useState(0);
   useEffect(() => {
     if (status === "idle" && active) {
@@ -218,7 +218,7 @@ export default function TimerPage() {
     if (!canStart) return;
     const now = new Date();
     wallRef.current = Date.now();
-    // Keep existing progress (from DB) — don't reset to 0
+    // Keep existing progress from DB, don't reset to 0
     setSessionStart(now); setElapsed(0); setNote(""); setAiResult(null);
     setStatus("running");
     saveTimer({ status: "running", wallStart: Date.now(), totalSecs: total, sessionStart: now.toISOString(), progress, note: "" });
@@ -246,7 +246,7 @@ export default function TimerPage() {
       setDone(p => [{ subject: subj(focus), duration: elapsed, pct: progress }, ...p]);
       setElapsed(0); setNote(""); clearTimer();
       if (data.taskCompleted) {
-        // Task is 100% done — AI events deleted server-side.
+        // Task is 100% done, AI events deleted server-side.
         // Trigger full AI refresh so dashboard suggestions, schedule, and timer all update.
         setProgress(0);
         notifyChange("tasks");

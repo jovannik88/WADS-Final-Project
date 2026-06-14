@@ -60,7 +60,7 @@ const EMPTY_FORM: TaskFormState = {
 
 // Signal to calendar/dashboard that tasks changed and AI schedule needs refresh
 function markTasksDirty() {
-  try { sessionStorage.setItem("tasks_dirty", "1"); } catch { /* ignore */ }
+  try { sessionStorage.setItem("tasks_dirty", "1"); } catch { return; }
 }
 
 export default function TasksPage() {
@@ -314,7 +314,7 @@ export default function TasksPage() {
                         <span className="ml-2 text-teal-600 text-xs font-medium">· AI {task.aiScore.toFixed(0)}/100</span>
                       )}
                     </p>
-                    {/* Read-only progress bar — updated by timer sessions */}
+                    {/* Read-only progress bar, updated by timer sessions */}
                     {task.progress > 0 && !done && (
                       <div className="mt-2 flex items-center gap-2">
                         <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">

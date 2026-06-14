@@ -102,7 +102,7 @@ describe("Security — Authentication", () => {
   });
 });
 
-// AUTHORIZATION TESTING (IDOR — Insecure Direct Object Reference)
+// AUTHORIZATION TESTING (IDOR: Insecure Direct Object Reference)
 describe("Security — Authorization (IDOR)", () => {
 
   itAuth("cannot access another user's task by guessing ID", async () => {
@@ -142,7 +142,7 @@ describe("Security — Authorization (IDOR)", () => {
     const res = await fetch(`${BASE}/api/events/999999`, {
       headers: authHeaders(),
     });
-    // 404 = not found, 400 = bad id, 200 = empty, 405 = method not allowed — all safe
+    // 404 = not found, 400 = bad id, 200 = empty, 405 = method not allowed: all safe
     expect([404, 400, 200, 405]).toContain(res.status);
   });
 
@@ -173,7 +173,7 @@ describe("Security — XSS Prevention", () => {
       if (res.status === 201) {
         const data = await res.json();
         // Stored value must not contain script tags
-        // Sanitizer strips HTML tags — check script tags and event handlers are removed
+        // Sanitizer strips HTML tags: check script tags and event handlers are removed
         expect(data.task.title).not.toMatch(/<script/i);
         expect(data.task.title).not.toMatch(/onerror=/i);
         expect(data.task.title).not.toMatch(/onload=/i);
@@ -271,7 +271,7 @@ describe("Security — SQL Injection Prevention", () => {
         body: JSON.stringify({ title: payload }),
       });
 
-      // Must not crash (500) — Prisma uses parameterized queries
+      // Must not crash (500): Prisma uses parameterized queries
       expect(res.status).not.toBe(500);
       expect([200, 201, 400]).toContain(res.status);
 
@@ -308,7 +308,7 @@ describe("Security — SQL Injection Prevention", () => {
       `${BASE}/api/tasks?status=' OR '1'='1`,
       { headers: authHeaders() }
     );
-    // Server handles invalid enum values — returns 200, 400, or 500
+    // Server handles invalid enum values: returns 200, 400, or 500
     // Prisma parameterized queries prevent actual SQL injection even if server errors
     expect([200, 400, 500]).toContain(res.status);
     if (res.status === 200) {
@@ -452,7 +452,7 @@ describe("Security — Sensitive Data Exposure", () => {
   itAuth("task list does not expose other users data", async () => {
     const res = await fetch(`${BASE}/api/tasks`, { headers: authHeaders() });
     const data = await res.json();
-    // Response must be an array — no raw DB dumps
+    // Response must be an array: no raw DB dumps
     expect(Array.isArray(data.tasks)).toBe(true);
     // Must not expose internal fields
     if (data.tasks.length > 0) {
