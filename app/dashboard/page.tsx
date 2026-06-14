@@ -54,7 +54,7 @@ function greeting() {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { prioritized, scheduleBlocks, analysedAt, refreshing: loadingAI, refreshFromDB } = useAiSync();
+  const { prioritized, scheduleBlocks, analysedAt, refreshing: loadingAI, refreshFromDB, notifyChange } = useAiSync();
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
