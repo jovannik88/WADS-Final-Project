@@ -39,8 +39,9 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
       await createSession(idToken);
+      const destination = result.user.email === "lyonel@gmail.com" ? "/admin" : "/dashboard";
       toast.success("Welcome back! 🎉");
-      router.push("/dashboard");
+      router.push(destination);
       router.refresh();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -74,8 +75,9 @@ export default function LoginPage() {
       const result = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await result.user.getIdToken();
       await createSession(idToken);
+      const destination = result.user.email === "lyonel@gmail.com" ? "/admin" : "/dashboard";
       toast.success("Welcome back! 🎉");
-      router.push("/dashboard");
+      router.push(destination);
       router.refresh();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
