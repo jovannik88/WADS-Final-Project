@@ -34,15 +34,19 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Convert DB events → ScheduleBlock format for the frontend
+    // Convert DB events → ScheduleBlock format for the frontend.
+    // startISO/endISO are raw UTC strings so the browser can format
+    // them in the user's local timezone via toLocaleTimeString().
     const blocks: ScheduleBlock[] = aiEvents.map(ev => {
       const start = new Date(ev.startTime);
       const end   = new Date(ev.endTime);
-      const startHour = start.getHours() + start.getMinutes() / 60;
-      const endHour   = end.getHours()   + end.getMinutes()   / 60;
+      const startHour = start.getUTCHours() + start.getUTCMinutes() / 60;
+      const endHour   = end.getUTCHours()   + end.getUTCMinutes()   / 60;
       return {
         startHour,
         endHour,
+        startISO: ev.startTime.toISOString(),
+        endISO:   ev.endTime.toISOString(),
         taskTitle: ev.title,
         subject: null,
         blockType: "focus" as const,

@@ -38,9 +38,11 @@ const PRIORITY_BADGE: Record<string, string> = {
   LOW: "bg-slate-50 text-slate-500 ring-1 ring-inset ring-slate-200",
 };
 
-function formatHour(h: number) {
-  const hh = Math.floor(h);
-  const mm = Math.round((h - hh) * 60);
+// Uses ISO string (timezone-aware) when available, falls back to UTC decimal hour
+function fmtBlock(iso?: string, h?: number) {
+  if (iso) return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const hh = Math.floor(h ?? 0);
+  const mm = Math.round(((h ?? 0) - hh) * 60);
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
@@ -327,7 +329,7 @@ export default function DashboardPage() {
                           <div className="text-gray-500 text-xs mt-1 space-y-0.5">
                             {focusBlocks.slice(0, 3).map((b, i) => (
                               <p key={i}>
-                                {formatHour(b.startHour)}–{formatHour(b.endHour)} · {b.taskTitle}
+                                {fmtBlock(b.startISO, b.startHour)}–{fmtBlock(b.endISO, b.endHour)} · {b.taskTitle}
                               </p>
                             ))}
                           </div>

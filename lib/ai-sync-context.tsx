@@ -12,6 +12,8 @@ export interface AIPrioritized {
 export interface ScheduleBlock {
   startHour: number;
   endHour: number;
+  startISO?: string;   // raw UTC ISO – use this for local-timezone display
+  endISO?: string;
   taskTitle: string;
   blockType: "focus" | "break" | "buffer";
   durationMin: number;

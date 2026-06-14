@@ -19,11 +19,12 @@ interface GeminiTurn {
 }
 
 interface PrioritizedTask { taskId: number; title: string; aiScore: number; aiReason: string; suggestedOrder: number }
-interface ScheduleBlock { startHour: number; endHour: number; taskTitle: string; blockType: "focus" | "break"; durationMin: number }
+interface ScheduleBlock { startHour: number; endHour: number; startISO?: string; endISO?: string; taskTitle: string; blockType: "focus" | "break"; durationMin: number }
 
-function formatHour(h: number) {
-  const hh = Math.floor(h);
-  const mm = Math.round((h % 1) * 60);
+function fmtBlock(iso?: string, h?: number) {
+  if (iso) return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const hh = Math.floor(h ?? 0);
+  const mm = Math.round(((h ?? 0) - hh) % 1 * 60);
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
@@ -259,7 +260,7 @@ export default function AIAssistantPage() {
 
       const detail = focusBlocks.length > 0
         ? focusBlocks.slice(0, 4).map((b: ScheduleBlock) =>
-            `**${formatHour(b.startHour)}–${formatHour(b.endHour)}** — ${b.taskTitle} (${b.durationMin} min)`
+            `**${fmtBlock(b.startISO, b.startHour)}–${fmtBlock(b.endISO, b.endHour)}** — ${b.taskTitle} (${b.durationMin} min)`
           ).join("\n")
         : "";
 
@@ -419,7 +420,7 @@ export default function AIAssistantPage() {
               <div className="flex flex-col gap-2 px-4 pb-4">
                 {schedule.map((b, i) => (
                   <div key={i} className={`flex items-center gap-3 ${b.blockType === "break" ? "opacity-40" : ""}`}>
-                    <span className="text-xs text-gray-500 font-mono w-24 flex-shrink-0">{formatHour(b.startHour)}–{formatHour(b.endHour)}</span>
+                    <span className="text-xs text-gray-500 font-mono w-24 flex-shrink-0">{fmtBlock(b.startISO, b.startHour)}–{fmtBlock(b.endISO, b.endHour)}</span>
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${b.blockType === "focus" ? "bg-teal-500" : "bg-gray-300"}`} />
                     <p className="text-sm text-gray-800 flex-1 truncate">{b.taskTitle}</p>
                     <span className="text-xs text-gray-400">{b.durationMin}m</span>
