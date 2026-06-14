@@ -36,10 +36,10 @@ function fmtTime(iso: string)                 { return new Date(iso).toLocaleTim
 function toLocalDT(iso: string)               { const d = new Date(iso); const p = (n: number) => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
 
 // Default datetime-local value for a given calendar day in the current view
-function defaultDT(year: number, month: number, day: number) {
-  const d = new Date(year, month, day, 9, 0);
+function defaultDT(year: number, month: number, day: number, hourOffset = 0) {
+  const d = new Date(year, month, day, 9 + hourOffset, 0);
   const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T09:00`;
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:00`;
 }
 
 export default function CalendarPage() {
@@ -117,8 +117,9 @@ export default function CalendarPage() {
   const closeDayModal = () => { setShowDayModal(false); };
 
   const openAdd = (day: number) => {
-    const dt = defaultDT(year, month, day);
-    setForm({ title: "", description: "", startTime: dt, endTime: dt, eventType: "PERSONAL", allDay: false });
+    const dt    = defaultDT(year, month, day, 0);
+    const dtEnd = defaultDT(year, month, day, 1);
+    setForm({ title: "", description: "", startTime: dt, endTime: dtEnd, eventType: "PERSONAL", allDay: false });
     setEditingEvent(null);
     setShowAddModal(true);
   };
@@ -421,11 +422,20 @@ export default function CalendarPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-bold text-gray-400 mb-2 block uppercase tracking-widest">Start</label>
-                  <input id="event-start-input" type="datetime-local" value={form.startTime} onChange={e => setForm({ ...form, startTime: e.target.value, endTime: e.target.value })} className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all" />
+                  <input id="event-start-input" type="datetime-local" value={form.startTime} onChange={e => {
+                    const newStart = e.target.value;
+                    const startMs = new Date(newStart).getTime();
+                    const endMs   = new Date(form.endTime).getTime();
+                    const newEnd  = endMs > startMs ? form.endTime : new Date(startMs + 60 * 60 * 1000).toISOString().slice(0, 16);
+                    setForm({ ...form, startTime: newStart, endTime: newEnd });
+                  }} className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all" />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-gray-400 mb-2 block uppercase tracking-widest">End</label>
-                  <input id="event-end-input" type="datetime-local" value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })} className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all" />
+                  <input id="event-end-input" type="datetime-local" value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })} className={`w-full border rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all ${form.endTime && new Date(form.endTime) <= new Date(form.startTime) ? "border-red-400 focus:ring-red-300" : "border-gray-200 focus:ring-teal-400"}`} />
+                  {form.endTime && new Date(form.endTime) <= new Date(form.startTime) && (
+                    <p className="text-red-500 text-xs mt-1">End must be after start</p>
+                  )}
                 </div>
               </div>
               <div>
@@ -441,7 +451,7 @@ export default function CalendarPage() {
             </div>
             <div className="flex gap-3 px-7 pb-7">
               <button onClick={closeAddModal} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-2xl text-sm font-semibold hover:bg-gray-50 transition-colors">Cancel</button>
-              <button id="submit-event-btn" onClick={submitEvent} disabled={!form.title.trim() || submitting} className="flex-1 bg-teal-600 hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed text-white py-3 rounded-2xl text-sm font-semibold transition-all active:scale-[0.97] shadow-lg shadow-teal-200">
+              <button id="submit-event-btn" onClick={submitEvent} disabled={!form.title.trim() || submitting || new Date(form.endTime) <= new Date(form.startTime)} className="flex-1 bg-teal-600 hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed text-white py-3 rounded-2xl text-sm font-semibold transition-all active:scale-[0.97] shadow-lg shadow-teal-200">
                 {submitting ? (editingEvent ? "Saving..." : "Adding...") : (editingEvent ? "Save Changes" : "Add Event")}
               </button>
             </div>
