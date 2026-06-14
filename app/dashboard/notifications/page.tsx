@@ -148,7 +148,7 @@ export default function NotificationsPage() {
               return (
                 <button key={tab.id} onClick={() => setFilter(tab.id)}
                   className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${filter === tab.id ? "bg-gray-900 text-white shadow-sm" : "text-gray-500 hover:text-gray-800"}`}>
-                  <span className="sm:hidden">{tab.shortLabel}</span>
+                  <span className="sm:hidden" aria-hidden="true">{tab.shortLabel}</span>
                   <span className="hidden sm:inline">{tab.label}</span>
                   {count > 0 && <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${filter === tab.id ? "bg-white/20 text-white" : "bg-teal-50 text-teal-600"}`}>{count}</span>}
                 </button>
