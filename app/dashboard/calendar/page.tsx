@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
 import { useAiSync } from "@/lib/ai-sync-context";
 
@@ -462,7 +463,7 @@ export default function CalendarPage() {
                             </div>
                             <p className={`text-xs mt-0.5 font-medium ${priorityColor}`}>{t.priority} priority</p>
                           </div>
-                          <a href="/dashboard/tasks" className="text-xs font-semibold text-rose-500 hover:text-rose-700 transition-colors flex-shrink-0">View →</a>
+                          <Link href="/dashboard/tasks" className="text-xs font-semibold text-rose-500 hover:text-rose-700 transition-colors flex-shrink-0">View →</Link>
                         </div>
                       );
                     })}
