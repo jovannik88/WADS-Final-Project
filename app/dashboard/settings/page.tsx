@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { sendPasswordResetEmail } from "firebase/auth";
+import { sendPasswordResetEmail, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 
@@ -104,11 +105,11 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
   const [loadingInit, setLoadingInit] = useState(true);
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
 
   // Profile state
-  const [name,     setName]     = useState("");
-  const [email,    setEmail]    = useState("");
-  const [timezone, setTimezone] = useState("Asia/Jakarta");
+  const [name,  setName]  = useState("");
+  const [email, setEmail] = useState("");
 
   // Study prefs state
   const [peakStart,     setPeakStart]     = useState("19:00");
@@ -151,7 +152,7 @@ const [accountMeta, setAccountMeta] = useState({
       weeklySummary: boolean;
       deadlineLeadHours: number;
     }>("/api/user/notifications");
-    console.log("NOTIFICATION DATA:", notifRes);
+
       setNotifDeadline(notifRes.deadlineReminders);
       setNotifSession(notifRes.sessionReminders);
       setNotifAI(notifRes.aiSuggestions);
@@ -168,7 +169,7 @@ setDeadlineHours(String(notifRes.deadlineLeadHours));
       const u = profileRes.user;
       setName(u.name ?? "");
       setEmail(u.email ?? "");
-      setTimezone(u.timezone ?? "Asia/Jakarta");
+
 setAccountMeta({
   createdAt: u.createdAt
     ? new Date(u.createdAt).toLocaleDateString("en-US", {
@@ -191,9 +192,7 @@ if (s) {
   setPomodoroWork(s.pomodoroMins ?? 25);
   setPomodoroBreak(s.shortBreakMins ?? 5);
 
-  if (s.timezone) {
-    setTimezone(s.timezone);
-  }
+
 }
     } catch (err) {
       toast.error("Failed to load settings — please refresh");
@@ -212,7 +211,7 @@ if (s) {
     try {
       await apiFetch("/api/user/profile", {
         method: "PUT",
-        body: JSON.stringify({ name, email, timezone }),
+        body: JSON.stringify({ name, email }),
       });
       toast.success("Profile updated successfully");
     } catch (err: unknown) {
@@ -340,10 +339,9 @@ const handleExportData = async () => {
     setSaving(true);
     try {
       await apiFetch("/api/user", { method: "DELETE" });
-      toast.error("Account deleted — redirecting…");
-      setShowDeleteConfirm(false);
-      setDeleteInput("");
-      // In a real app: router.push("/goodbye") or signOut()
+      toast.success("Account deleted");
+      await signOut(auth);
+      router.push("/");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Account deletion failed");
     } finally {
@@ -466,20 +464,7 @@ const handleExportData = async () => {
                     />
                   </Field>
 
-                  <Field label="Timezone" hint="Used to schedule study sessions at the right local time">
-                    <div className="relative">
-                      <select
-                        value={timezone}
-                        onChange={(e) => setTimezone(e.target.value)}
-                        className={selectCls}
-                      >
-                        {TIMEZONES.map((tz) => (
-                          <option key={tz} value={tz}>{tz}</option>
-                        ))}
-                      </select>
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">▾</span>
-                    </div>
-                  </Field>
+
                 </div>
 
                 <div className="mt-7 flex justify-end">
