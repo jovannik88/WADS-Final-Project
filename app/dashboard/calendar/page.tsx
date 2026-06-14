@@ -20,6 +20,14 @@ interface CalEvent {
   taskId: number | null;
 }
 
+interface Task {
+  id: number;
+  title: string;
+  dueDate: string | null;
+  status: string;
+  priority: string;
+}
+
 const TYPE_CFG: Record<EventType, { bg: string; dot: string; text: string; label: string }> = {
   CLASS:       { bg: "bg-blue-100 border-l-2 border-blue-400",   dot: "bg-blue-400",   text: "text-blue-700",   label: "Class" },
   EXAM:        { bg: "bg-amber-100 border-l-2 border-amber-400", dot: "bg-amber-400",  text: "text-amber-700",  label: "Exam" },
@@ -49,6 +57,7 @@ export default function CalendarPage() {
   const [year,  setYear]  = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [events, setEvents] = useState<CalEvent[]>([]);
+  const [tasks,  setTasks]  = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<number | null>(null);
   const [showDayModal, setShowDayModal] = useState(false);
@@ -67,10 +76,16 @@ export default function CalendarPage() {
     try {
       const startDate = new Date(y, m, 1).toISOString();
       const endDate   = new Date(y, m + 1, 0, 23, 59, 59).toISOString();
-      const res = await fetch(`/api/events?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`);
-      if (res.status === 401) { router.push("/login"); return; }
-      const data = await res.json();
-      setEvents(data.events ?? []);
+      const [evRes, taskRes] = await Promise.all([
+        fetch(`/api/events?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+        fetch("/api/tasks"),
+      ]);
+      if (evRes.status === 401) { router.push("/login"); return; }
+      const evData   = await evRes.json();
+      const taskData = taskRes.ok ? await taskRes.json() : { tasks: [] };
+      setEvents(evData.events ?? []);
+      // Only show non-completed tasks that have a due date
+      setTasks((taskData.tasks ?? []).filter((t: Task) => t.dueDate && t.status !== "COMPLETED"));
     } catch {
       toast.error("Failed to load events");
     } finally {
@@ -181,6 +196,14 @@ export default function CalendarPage() {
       return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
     });
 
+  // Map tasks with due dates to calendar days
+  const tasksForDay = (day: number) =>
+    tasks.filter(t => {
+      if (!t.dueDate) return false;
+      const d = new Date(t.dueDate);
+      return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+    });
+
   // Build grid
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay    = getFirstDay(year, month);
@@ -232,6 +255,10 @@ export default function CalendarPage() {
           <div className="flex items-center gap-1.5 text-xs text-teal-600 font-semibold">
             <span className="text-[10px] bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded font-bold">AI</span>
             AI-generated
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-rose-500 font-medium">
+            <span className="w-2 h-2 rounded-full bg-rose-400" />
+            Deadline
           </div>
         </div>
 
@@ -309,8 +336,21 @@ export default function CalendarPage() {
                         </div>
                       );
                     })}
-                    {dayEvts.length > 2 && (
+                    {cell.current && tasksForDay(cell.day).map(t => (
+                      <div
+                        key={`dl-${t.id}`}
+                        className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-medium truncate bg-rose-100 border-l-2 border-rose-400 text-rose-700"
+                        title={`Deadline: ${t.title}`}
+                      >
+                        <span className="text-[9px] font-bold flex-shrink-0">DUE</span>
+                        <span className="truncate">{t.title}</span>
+                      </div>
+                    ))}
+                    {(dayEvts.length + (cell.current ? tasksForDay(cell.day).length : 0)) > 3 && dayEvts.length > 2 && (
                       <div className="text-[10px] text-gray-400 font-semibold pl-1">+{dayEvts.length - 2} more</div>
+                    )}
+                    {dayEvts.length <= 2 && dayEvts.length + (cell.current ? tasksForDay(cell.day).length : 0) > 2 && (
+                      <div className="text-[10px] text-gray-400 font-semibold pl-1">+{dayEvts.length + tasksForDay(cell.day).length - 2} more</div>
                     )}
                   </div>
                 </div>
@@ -324,6 +364,7 @@ export default function CalendarPage() {
       {/* Day popup modal */}
       {showDayModal && selected !== null && (() => {
         const dayEvts = eventsForDay(selected).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+        const dayDeadlines = tasksForDay(selected);
         const dateLabel = new Date(year, month, selected).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
         return (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && closeDayModal()}>
@@ -331,7 +372,11 @@ export default function CalendarPage() {
               <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">{dateLabel}</h2>
-                  <p className="text-sm text-gray-400 mt-0.5">{dayEvts.length === 0 ? "No events" : `${dayEvts.length} event${dayEvts.length > 1 ? "s" : ""}`}</p>
+                  <p className="text-sm text-gray-400 mt-0.5">
+                    {dayEvts.length === 0 && dayDeadlines.length === 0
+                      ? "No events"
+                      : `${dayEvts.length} event${dayEvts.length !== 1 ? "s" : ""}${dayDeadlines.length > 0 ? ` · ${dayDeadlines.length} deadline${dayDeadlines.length !== 1 ? "s" : ""}` : ""}`}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => { closeDayModal(); openAdd(selected); }} className="flex items-center gap-1.5 text-sm font-semibold text-teal-600 hover:bg-teal-50 px-3 py-2 rounded-xl transition-all">
@@ -344,7 +389,7 @@ export default function CalendarPage() {
                 </div>
               </div>
               <div className="overflow-y-auto flex-1">
-                {dayEvts.length === 0 ? (
+                {dayEvts.length === 0 && dayDeadlines.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-14 text-gray-400">
                     <span className="text-4xl mb-3">📅</span>
                     <p className="text-sm font-medium">No events scheduled</p>
@@ -387,6 +432,27 @@ export default function CalendarPage() {
                               </button>
                             </div>
                           )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* Deadlines section */}
+                {dayDeadlines.length > 0 && (
+                  <div className={`divide-y divide-gray-50 ${dayEvts.length > 0 ? "border-t border-rose-100" : ""}`}>
+                    {dayDeadlines.map(t => {
+                      const priorityColor = t.priority === "HIGH" ? "text-red-500" : t.priority === "MEDIUM" ? "text-amber-500" : "text-gray-400";
+                      return (
+                        <div key={`dl-${t.id}`} className="flex items-center gap-4 px-6 py-4 bg-rose-50/50 hover:bg-rose-50 transition-colors">
+                          <div className="w-1 self-stretch rounded-full flex-shrink-0 bg-rose-400" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-gray-900 text-sm">{t.title}</p>
+                              <span className="text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-bold flex-shrink-0">DUE</span>
+                            </div>
+                            <p className={`text-xs mt-0.5 font-medium ${priorityColor}`}>{t.priority} priority</p>
+                          </div>
+                          <a href="/dashboard/tasks" className="text-xs font-semibold text-rose-500 hover:text-rose-700 transition-colors flex-shrink-0">View →</a>
                         </div>
                       );
                     })}
