@@ -285,6 +285,12 @@ docker compose up --build
 | POST | `/api/ai-optimize` | Trigger AI schedule regeneration and save to calendar | Yes |
 | GET | `/api/export` | Export user data (tasks, sessions, events) | Yes |
 | GET | `/api/user/notifications` | Get notification preferences for current user | Yes |
+| GET | `/api/admin/users` | List all users with counts — admin only | Yes (Admin) |
+| DELETE | `/api/admin/users/{uid}` | Delete a user and all their data — admin only | Yes (Admin) |
+| PATCH | `/api/admin/users/{uid}` | Deactivate or reactivate a user — admin only | Yes (Admin) |
+| GET | `/api/admin/analytics` | System-wide stats: users, tasks, sessions, AI — admin only | Yes (Admin) |
+| POST | `/api/admin/notifications/broadcast` | Send a notification to all users — admin only | Yes (Admin) |
+| GET | `/api/admin/ai-usage` | AI usage stats: requests, scores, activity — admin only | Yes (Admin) |
 
 ---
 

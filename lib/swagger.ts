@@ -453,6 +453,86 @@ export const getApiDocs = async () => {
           },
         },
       },
+      "/api/admin/users": {
+        get: {
+          tags: ["Admin"],
+          summary: "List all users with task and session counts (admin only)",
+          responses: {
+            "200": { description: "Array of all users" },
+            "401": { description: "Not admin" },
+          },
+        },
+      },
+      "/api/admin/users/{uid}": {
+        delete: {
+          tags: ["Admin"],
+          summary: "Delete a user and all their data (admin only)",
+          parameters: [{ name: "uid", in: "path", required: true, schema: { type: "string" } }],
+          responses: { "200": { description: "User deleted" }, "401": { description: "Not admin" } },
+        },
+        patch: {
+          tags: ["Admin"],
+          summary: "Deactivate or reactivate a user account (admin only)",
+          parameters: [{ name: "uid", in: "path", required: true, schema: { type: "string" } }],
+          requestBody: {
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { disabled: { type: "boolean" } },
+                },
+              },
+            },
+          },
+          responses: { "200": { description: "User updated" }, "401": { description: "Not admin" } },
+        },
+      },
+      "/api/admin/analytics": {
+        get: {
+          tags: ["Admin"],
+          summary: "System-wide analytics: users, tasks, sessions, AI usage (admin only)",
+          responses: {
+            "200": { description: "Aggregated platform statistics" },
+            "401": { description: "Not admin" },
+          },
+        },
+      },
+      "/api/admin/notifications/broadcast": {
+        post: {
+          tags: ["Admin"],
+          summary: "Broadcast a notification to all users (admin only)",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string" },
+                    body: { type: "string" },
+                    type: { type: "string", enum: ["REMINDER", "AI_ALERT", "DEADLINE", "ACHIEVEMENT"] },
+                  },
+                  required: ["title", "body"],
+                },
+              },
+            },
+          },
+          responses: {
+            "200": { description: "Notification sent to all users, returns count" },
+            "401": { description: "Not admin" },
+          },
+        },
+      },
+      "/api/admin/ai-usage": {
+        get: {
+          tags: ["Admin"],
+          summary: "AI usage stats: requests, score distribution, recent activity (admin only)",
+          responses: {
+            "200": { description: "AI usage statistics" },
+            "401": { description: "Not admin" },
+          },
+        },
+      },
     },
   };
 };
