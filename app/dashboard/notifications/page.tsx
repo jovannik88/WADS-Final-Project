@@ -22,12 +22,12 @@ const CFG: Record<NotifType, { label: string; icon: string; iconBg: string; icon
   ACHIEVEMENT: { label: "Achievements",icon: "🏆",  iconBg: "bg-orange-50", iconColor: "text-orange-500", badge: "bg-orange-50 text-orange-700 ring-1 ring-orange-200",action: { label: "View Analytics", href: "/dashboard/analytics" } },
 };
 
-const TABS: { id: Filter; label: string; shortLabel: string }[] = [
-  { id: "all",         label: "All",          shortLabel: "All" },
-  { id: "REMINDER",    label: "Sessions",     shortLabel: "Sessions" },
-  { id: "DEADLINE",    label: "Deadlines",    shortLabel: "Deadlines" },
-  { id: "AI_ALERT",   label: "AI Updates",   shortLabel: "AI" },
-  { id: "ACHIEVEMENT", label: "Achievements", shortLabel: "Awards" },
+const TABS: { id: Filter; label: string }[] = [
+  { id: "all",         label: "All" },
+  { id: "REMINDER",    label: "Sessions" },
+  { id: "DEADLINE",    label: "Deadlines" },
+  { id: "AI_ALERT",   label: "AI" },
+  { id: "ACHIEVEMENT", label: "Awards" },
 ];
 
 function relTime(iso: string) {
@@ -148,8 +148,7 @@ export default function NotificationsPage() {
               return (
                 <button key={tab.id} onClick={() => setFilter(tab.id)}
                   className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${filter === tab.id ? "bg-gray-900 text-white shadow-sm" : "text-gray-500 hover:text-gray-800"}`}>
-                  <span className="sm:hidden" aria-hidden="true">{tab.shortLabel}</span>
-                  <span className="hidden sm:inline">{tab.label}</span>
+                  {tab.label}
                   {count > 0 && <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${filter === tab.id ? "bg-white/20 text-white" : "bg-teal-50 text-teal-600"}`}>{count}</span>}
                 </button>
               );
