@@ -277,14 +277,13 @@ export default function CalendarPage() {
           </div>
 
           {/* Day headers */}
-          <div className="overflow-x-auto">
-          <div className="grid grid-cols-7 border-b border-gray-100 min-w-[560px]">
+          <div className="grid grid-cols-7 border-b border-gray-100">
             {DAYS.map(d => (
-              <div key={d} className="py-3 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">{d}</div>
+              <div key={d} className="py-2 md:py-3 text-center text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">{d}</div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 min-w-[560px]">
+          <div className="grid grid-cols-7">
             {cells.map((cell, idx) => {
               const dayEvts = cell.current ? eventsForDay(cell.day) : [];
               const isSelected = selected === cell.day && cell.current;
@@ -296,15 +295,16 @@ export default function CalendarPage() {
                 <div
                   key={idx}
                   onClick={() => { if (!cell.current) return; openDayPopup(cell.day); }}
-                  className={`relative min-h-[100px] p-2 transition-all cursor-pointer
+                  className={`relative min-h-[56px] md:min-h-[100px] p-1 md:p-2 transition-all cursor-pointer
                     ${!isLastRow ? "border-b border-gray-100" : ""}
                     ${!isLastCol ? "border-r border-gray-100" : ""}
                     ${!cell.current ? "bg-gray-50/60" : "hover:bg-gray-50"}
                     ${isSelected ? "bg-teal-50/60 ring-2 ring-inset ring-teal-400" : ""}
                   `}
                 >
-                  <div className="flex justify-between items-start mb-1.5">
-                    <span className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-semibold transition-all
+                  {/* Day number */}
+                  <div className="flex justify-between items-start mb-1">
+                    <span className={`w-6 h-6 md:w-7 md:h-7 flex items-center justify-center rounded-full text-[11px] md:text-xs font-semibold transition-all
                       ${isToday ? "bg-teal-600 text-white shadow-sm shadow-teal-300" : ""}
                       ${!isToday && cell.current ? "text-gray-700" : "text-gray-300"}
                       ${isSelected && !isToday ? "text-teal-700" : ""}
@@ -314,12 +314,25 @@ export default function CalendarPage() {
                     {cell.current && (
                       <button
                         onClick={(e) => { e.stopPropagation(); openAdd(cell.day); }}
-                        className="opacity-0 hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-gray-300 hover:text-teal-600 hover:bg-teal-50 transition-all text-lg leading-none"
+                        className="hidden md:flex opacity-0 hover:opacity-100 w-5 h-5 items-center justify-center rounded text-gray-300 hover:text-teal-600 hover:bg-teal-50 transition-all text-lg leading-none"
                       >+</button>
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-1">
+                  {/* Mobile: colored dot indicators */}
+                  {cell.current && (dayEvts.length > 0 || tasksForDay(cell.day).length > 0) && (
+                    <div className="flex flex-wrap gap-0.5 md:hidden px-0.5">
+                      {dayEvts.slice(0, 3).map(ev => (
+                        <span key={ev.id} className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${TYPE_CFG[ev.eventType].dot}`} />
+                      ))}
+                      {tasksForDay(cell.day).map(t => (
+                        <span key={`dl-${t.id}`} className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-rose-400" />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Desktop: full text chips */}
+                  <div className="hidden md:flex flex-col gap-1">
                     {dayEvts.slice(0, 2).map(ev => {
                       const cfg = TYPE_CFG[ev.eventType];
                       return (
@@ -346,18 +359,15 @@ export default function CalendarPage() {
                         <span className="truncate">{t.title}</span>
                       </div>
                     ))}
-                    {(dayEvts.length + (cell.current ? tasksForDay(cell.day).length : 0)) > 3 && dayEvts.length > 2 && (
+                    {dayEvts.length > 2 && (
                       <div className="text-[10px] text-gray-400 font-semibold pl-1">+{dayEvts.length - 2} more</div>
-                    )}
-                    {dayEvts.length <= 2 && dayEvts.length + (cell.current ? tasksForDay(cell.day).length : 0) > 2 && (
-                      <div className="text-[10px] text-gray-400 font-semibold pl-1">+{dayEvts.length + tasksForDay(cell.day).length - 2} more</div>
                     )}
                   </div>
                 </div>
               );
             })}
           </div>
-          </div>{/* end overflow-x-auto */}
+
         </div>{/* end calendar card */}
       </div>
 
@@ -367,8 +377,8 @@ export default function CalendarPage() {
         const dayDeadlines = tasksForDay(selected);
         const dateLabel = new Date(year, month, selected).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
         return (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && closeDayModal()}>
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh]">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={(e) => e.target === e.currentTarget && closeDayModal()}>
+            <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-lg overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[80vh]">
               <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">{dateLabel}</h2>

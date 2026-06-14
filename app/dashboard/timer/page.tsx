@@ -264,7 +264,7 @@ export default function TimerPage() {
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Study Timer</h1>
-          <p className="text-gray-400 mt-1.5 text-sm">AI-scheduled sessions — tracked automatically for analytics</p>
+          <p className="text-gray-400 mt-1.5 text-sm">AI-scheduled sessions, tracked automatically for analytics</p>
         </div>
 
         {loading ? (
@@ -279,14 +279,14 @@ export default function TimerPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 flex flex-col gap-6">
               {focus && (
-                <div className="bg-gray-900 rounded-3xl p-5 flex items-center gap-4">
+                <div className="bg-gray-900 rounded-3xl p-4 md:p-5 flex items-center gap-3 md:gap-4">
                   <div className="w-10 h-10 bg-teal-500/20 rounded-xl flex items-center justify-center flex-shrink-0"><span className="text-lg">✦</span></div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-400 font-semibold uppercase tracking-widest mb-0.5">{active ? "Active Now" : "Up Next"}</p>
                     <p className="text-white font-bold text-base truncate">{focus.title}</p>
-                    <p className="text-gray-400 text-xs mt-0.5">{timeFmt(focus.startTime)} – {timeFmt(focus.endTime)} · ~{dur(focus)}m</p>
+                    <p className="text-gray-400 text-xs mt-0.5 truncate">{timeFmt(focus.startTime)} – {timeFmt(focus.endTime)} · ~{dur(focus)}m</p>
                   </div>
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-lg flex-shrink-0 ${sc.bg} ${sc.text}`}>{subj(focus)}</span>
+                  <span className={`hidden sm:inline-flex text-xs font-medium px-2.5 py-1 rounded-lg flex-shrink-0 ${sc.bg} ${sc.text}`}>{subj(focus)}</span>
                 </div>
               )}
 

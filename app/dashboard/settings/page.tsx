@@ -404,7 +404,7 @@ const handleExportData = async () => {
           <p className="text-gray-400 mt-1.5 text-sm">Manage your profile, study preferences, and account</p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex flex-col lg:flex-row gap-6 lg:items-start">
 
           {/* Sidebar */}
           <div className="w-full lg:w-56 flex-shrink-0">
@@ -420,7 +420,7 @@ const handleExportData = async () => {
                   }`}
                 >
                   <span className="text-base flex-shrink-0">{tab.icon}</span>
-                  <span className="hidden lg:inline">{tab.label}</span>
+                  <span className="text-sm">{tab.label}</span>
                 </button>
               ))}
             </div>

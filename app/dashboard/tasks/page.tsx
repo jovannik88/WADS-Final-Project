@@ -283,7 +283,7 @@ export default function TasksPage() {
                 <div
                   key={task.id}
                   onClick={() => openEdit(task)}
-                  className={`group relative flex items-center gap-5 bg-white border rounded-2xl px-6 py-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${done ? "border-gray-100 opacity-55" : "border-gray-100 shadow-sm"}`}
+                  className={`group relative flex items-center gap-3 md:gap-5 bg-white border rounded-2xl px-4 md:px-6 py-4 md:py-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${done ? "border-gray-100 opacity-55" : "border-gray-100 shadow-sm"}`}
                 >
                   <div className={`absolute left-0 top-4 bottom-4 w-1 rounded-r-full ${pc.bar} ${done ? "opacity-30" : ""}`} />
                   {/* Complete toggle */}
@@ -340,9 +340,9 @@ export default function TasksPage() {
                     {task.priority.toLowerCase()}
                   </span>
 
-                  {/* Due date with time */}
+                  {/* Due date — shown below title on mobile, inline on md+ */}
                   {task.dueDate && (
-                    <span className="text-sm text-gray-400 whitespace-nowrap font-medium">
+                    <span className="hidden md:inline text-sm text-gray-400 whitespace-nowrap font-medium">
                       {new Date(task.dueDate).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                     </span>
                   )}
