@@ -425,7 +425,7 @@ WADS-Final-Project/
 | Suite | Tests | Type | Requires Server |
 |---|---|---|---|
 | `ai-engine.test.ts` | 25 | AI engine unit | No |
-| `unit.test.ts` | 63 | API route unit | No |
+| `unit.test.ts` | 71 | API route unit + Admin RBAC | No |
 | `frontend.test.tsx` | 74 | Frontend UI | No |
 | `integration.test.ts` | 27 | API ↔ Database | Yes |
 | `security.test.ts` | 44 | Security | Yes |
@@ -433,11 +433,11 @@ WADS-Final-Project/
 | `ai-consistency.test.ts` | 70 | AI consistency & output | Yes |
 | `ai-failure.test.ts` | 51 | AI failure handling | Yes |
 | `ai-abuse.test.ts` | 50 | AI abuse & misuse | Yes |
-| **Total** | **468** | **Full stack** | |
+| **Total** | **476** | **Full stack** | |
 
 ---
 
-### unit.test.ts — API Route Unit (63 tests) (BACKEND)
+### unit.test.ts — API Route Unit + Admin RBAC (71 tests) (BACKEND)
 
 ![Backend Tests](<Test Screenshot/Backend Testing.png>)
 

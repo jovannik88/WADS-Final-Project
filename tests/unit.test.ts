@@ -18,10 +18,35 @@ jest.mock("@/lib/prisma", () => ({
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      count: jest.fn(),
+      aggregate: jest.fn(),
     },
-    user: { upsert: jest.fn(), update: jest.fn() },
+    user: {
+      upsert: jest.fn(),
+      update: jest.fn(),
+      findMany: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+    },
     userSettings: { findUnique: jest.fn() },
-    event: { deleteMany: jest.fn() },
+    event: {
+      deleteMany: jest.fn(),
+      count: jest.fn(),
+    },
+    studySession: {
+      count: jest.fn(),
+      aggregate: jest.fn(),
+      findMany: jest.fn(),
+    },
+    notification: {
+      count: jest.fn(),
+      createMany: jest.fn(),
+      findMany: jest.fn(),
+    },
+    aiCache: {
+      count: jest.fn(),
+      findMany: jest.fn(),
+    },
   },
 }));
 
@@ -66,6 +91,10 @@ import {
 import { POST as sessionPOST } from "@/app/api/session/route";
 import { POST as resetEmailPOST } from "@/app/api/auth/send-reset-email/route";
 import { GET as profileGET, PUT as profilePUT } from "@/app/api/user/profile/route";
+import { GET as adminUsersGET } from "@/app/api/admin/users/route";
+import { GET as adminAnalyticsGET } from "@/app/api/admin/analytics/route";
+import { POST as adminBroadcastPOST } from "@/app/api/admin/notifications/broadcast/route";
+import { GET as adminAiUsageGET } from "@/app/api/admin/ai-usage/route";
 
 import { z } from "zod";
 
@@ -885,5 +914,76 @@ describe("PUT /api/user/profile", () => {
     });
     const res = await profilePUT(req);
     expect(res.status).toBe(500);
+  });
+});
+
+
+// Admin RBAC — Role-Based Access Control security tests
+describe("Admin routes — unauthenticated requests return 401", () => {
+  test("GET /api/admin/users returns 401 with no session", async () => {
+    mockedVerifySession.mockResolvedValueOnce(null);
+    const req = makeReq("http://localhost/api/admin/users");
+    const res = await adminUsersGET(req);
+    expect(res.status).toBe(401);
+  });
+
+  test("GET /api/admin/analytics returns 401 with no session", async () => {
+    mockedVerifySession.mockResolvedValueOnce(null);
+    const req = makeReq("http://localhost/api/admin/analytics");
+    const res = await adminAnalyticsGET(req);
+    expect(res.status).toBe(401);
+  });
+
+  test("POST /api/admin/notifications/broadcast returns 401 with no session", async () => {
+    mockedVerifySession.mockResolvedValueOnce(null);
+    const req = makeReq("http://localhost/api/admin/notifications/broadcast", {
+      method: "POST",
+      body: { title: "Test", body: "Message" },
+    });
+    const res = await adminBroadcastPOST(req);
+    expect(res.status).toBe(401);
+  });
+
+  test("GET /api/admin/ai-usage returns 401 with no session", async () => {
+    mockedVerifySession.mockResolvedValueOnce(null);
+    const req = makeReq("http://localhost/api/admin/ai-usage");
+    const res = await adminAiUsageGET(req);
+    expect(res.status).toBe(401);
+  });
+});
+
+describe("Admin routes — non-admin users are blocked (RBAC)", () => {
+  const REGULAR_USER = { uid: "user-456", email: "student@example.com" } as any;
+
+  test("GET /api/admin/users returns 401 for regular user", async () => {
+    mockedVerifySession.mockResolvedValueOnce(REGULAR_USER);
+    const req = makeReq("http://localhost/api/admin/users", { cookie: "valid" });
+    const res = await adminUsersGET(req);
+    expect(res.status).toBe(401);
+  });
+
+  test("GET /api/admin/analytics returns 401 for regular user", async () => {
+    mockedVerifySession.mockResolvedValueOnce(REGULAR_USER);
+    const req = makeReq("http://localhost/api/admin/analytics", { cookie: "valid" });
+    const res = await adminAnalyticsGET(req);
+    expect(res.status).toBe(401);
+  });
+
+  test("POST /api/admin/notifications/broadcast returns 401 for regular user", async () => {
+    mockedVerifySession.mockResolvedValueOnce(REGULAR_USER);
+    const req = makeReq("http://localhost/api/admin/notifications/broadcast", {
+      method: "POST",
+      body: { title: "Hack", body: "Injected" },
+      cookie: "valid",
+    });
+    const res = await adminBroadcastPOST(req);
+    expect(res.status).toBe(401);
+  });
+
+  test("GET /api/admin/ai-usage returns 401 for regular user", async () => {
+    mockedVerifySession.mockResolvedValueOnce(REGULAR_USER);
+    const req = makeReq("http://localhost/api/admin/ai-usage", { cookie: "valid" });
+    const res = await adminAiUsageGET(req);
+    expect(res.status).toBe(401);
   });
 });
