@@ -19,7 +19,7 @@ const FEATURES = [
   {
     icon: "📋",
     title: "Task Management",
-    desc: "Organize assignments by subject, priority, and deadline — never miss a due date again.",
+    desc: "Organize assignments by subject, priority, and deadline. Never miss a due date again.",
     accent: "#f59e0b",
   },
   {
@@ -37,7 +37,7 @@ const FEATURES = [
   {
     icon: "🤖",
     title: "AI Assistant",
-    desc: "Your personal study companion — available anytime for help, planning, and motivation.",
+    desc: "Your personal study companion, available anytime for help, planning, and motivation.",
     accent: "#14b8a6",
   },
 ];
@@ -126,7 +126,7 @@ export default function LandingPage() {
 
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-1 ml-auto">
-            {["Features", "Reviews", "Pricing"].map((l) => (
+            {["Features", "Reviews"].map((l) => (
               <button
                 key={l}
                 onClick={() => scrollTo(l.toLowerCase())}
@@ -175,7 +175,7 @@ export default function LandingPage() {
         {mobileMenuOpen && (
           <div className="md:hidden mt-2 mx-4 rounded-2xl border border-white/[0.08] bg-[#0e1621]/95 backdrop-blur-xl overflow-hidden">
             <div className="flex flex-col p-3 gap-1">
-              {["Features", "Reviews", "Pricing"].map((l) => (
+              {["Features", "Reviews"].map((l) => (
                 <button
                   key={l}
                   onClick={() => scrollTo(l.toLowerCase())}
@@ -216,7 +216,7 @@ export default function LandingPage() {
         </h1>
 
         <p className="mx-auto max-w-[580px] text-[15px] sm:text-[18px] leading-relaxed text-white/50 mb-8 sm:mb-12 px-2">
-          The all-in-one academic companion that organizes your tasks, tracks your focus, and delivers AI-powered insights — so you can hit your goals every semester.
+          The all-in-one academic companion that organizes your tasks, tracks your focus, and delivers AI-powered insights so you can hit your goals every semester.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12 sm:mb-16">
@@ -407,52 +407,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="relative z-10 mx-auto max-w-3xl px-4 sm:px-6 pb-20 sm:pb-28 text-center scroll-mt-24">
-        <p className="text-[11px] font-semibold tracking-[2px] uppercase text-[#14b8a6] mb-4">Simple pricing</p>
-        <h2 className="text-[clamp(26px,5vw,50px)] font-extrabold tracking-tight mb-10 sm:mb-14">Start free, scale when ready</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {/* Free */}
-          <div className="rounded-2xl border border-white/[0.07] bg-[#111b27] p-7 sm:p-9 text-left">
-            <p className="text-[11px] uppercase tracking-widest text-white/35 font-semibold mb-4">Free</p>
-            <div className="flex items-baseline gap-1 mb-6 sm:mb-7">
-              <span className="text-[40px] sm:text-[46px] font-extrabold tracking-tight">$0</span>
-              <span className="text-[14px] text-white/30">/month</span>
-            </div>
-            <ul className="space-y-3 text-[13px] text-white/50 mb-7 sm:mb-8">
-              {["Up to 20 tasks", "Focus timer", "Basic analytics", "Calendar view"].map((i) => (
-                <li key={i} className="flex items-center gap-2"><span className="text-[#14b8a6]">✓</span> {i}</li>
-              ))}
-              {["AI suggestions", "AI assistant"].map((i) => (
-                <li key={i} className="flex items-center gap-2 opacity-30"><span>✗</span> {i}</li>
-              ))}
-            </ul>
-            <Link href="/register" className="block text-center py-3 rounded-xl text-[13px] font-semibold text-white/50 border border-white/[0.08] hover:border-white/[0.15] hover:text-white/75 transition-all">
-              Get started free
-            </Link>
-          </div>
 
-          {/* Pro */}
-          <div className="relative rounded-2xl p-7 sm:p-9 text-left" style={{ background: "linear-gradient(135deg, rgba(20,184,166,0.07), #111b27)", border: "1px solid rgba(20,184,166,0.28)", boxShadow: "0 0 60px rgba(20,184,166,0.10)" }}>
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-4 py-1 text-[10px] font-bold text-white whitespace-nowrap" style={{ background: "linear-gradient(135deg, #14b8a6, #0d9488)" }}>
-              Most Popular
-            </div>
-            <p className="text-[11px] uppercase tracking-widest text-white/35 font-semibold mb-4">Pro</p>
-            <div className="flex items-baseline gap-1 mb-6 sm:mb-7">
-              <span className="text-[40px] sm:text-[46px] font-extrabold tracking-tight">$9</span>
-              <span className="text-[14px] text-white/30">/month</span>
-            </div>
-            <ul className="space-y-3 text-[13px] text-white/50 mb-7 sm:mb-8">
-              {["Unlimited tasks", "Advanced focus timer", "Full analytics suite", "Calendar integrations", "AI-powered suggestions", "Unlimited AI assistant"].map((i) => (
-                <li key={i} className="flex items-center gap-2"><span className="text-[#14b8a6]">✓</span> {i}</li>
-              ))}
-            </ul>
-            <Link href="/register" className="block text-center py-3 rounded-xl text-[13px] font-bold text-white transition-all hover:-translate-y-0.5" style={{ background: "linear-gradient(135deg, #14b8a6, #0d9488)", boxShadow: "0 0 30px rgba(20,184,166,0.30)" }}>
-              Start Pro — 14 days free
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* CTA */}
       <section className="relative z-10 mx-auto max-w-2xl px-4 sm:px-6 pb-20 sm:pb-28 text-center">
@@ -471,12 +426,12 @@ export default function LandingPage() {
             className="inline-flex items-center gap-2 px-7 sm:px-8 py-4 rounded-xl text-[14px] sm:text-[15px] font-bold text-white mb-4 relative transition-all hover:-translate-y-0.5"
             style={{ background: "linear-gradient(135deg, #14b8a6, #0d9488)", boxShadow: "0 0 40px rgba(20,184,166,0.30)" }}
           >
-            Get Started — It&apos;s Free
+            Get Started Free
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
               <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </Link>
-          <p className="text-[12px] text-white/25 relative">No credit card required · Cancel anytime</p>
+          <p className="text-[12px] text-white/25 relative">No credit card required</p>
         </div>
       </section>
 

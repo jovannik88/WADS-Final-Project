@@ -438,9 +438,6 @@ const handleExportData = async () => {
                   <div>
                     <p className="font-bold text-gray-900 text-lg">{name}</p>
                     <p className="text-gray-400 text-sm mt-0.5">{email}</p>
-                    <p className="text-xs text-teal-600 font-medium mt-2 bg-teal-50 px-2.5 py-1 rounded-lg inline-block">
-                      Free plan
-                    </p>
                   </div>
                 </div>
 
