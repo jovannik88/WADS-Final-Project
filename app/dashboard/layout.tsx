@@ -69,18 +69,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
 
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  }, []);
-
-  const onTouchEnd = useCallback((e: React.TouchEvent) => {
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
-    // Swipe right, starting within 40px of left edge, at least 60px horizontal, more horizontal than vertical
-    if (touchStartX.current < 40 && dx > 60 && dy < 120) {
-      setMobileOpen(true);
-    }
+  useEffect(() => {
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - touchStartX.current;
+      const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+      // Swipe right starting within left 80px, at least 60px, more horizontal than vertical
+      if (touchStartX.current < 80 && dx > 60 && dy < 120) {
+        setMobileOpen(true);
+      }
+    };
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
   }, []);
 
   return (
@@ -95,8 +102,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <main
           className={`flex-1 bg-gray-50 transition-all duration-300 ease-in-out ${collapsed ? "md:ml-16" : "md:ml-64"}`}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
         >
           {/* Top bar — sticky, auto-hides on scroll down */}
           <div className={`sticky top-0 z-20 bg-gray-900 text-white px-4 py-3 text-sm font-medium flex items-center gap-3 transition-transform duration-300 md:translate-y-0 ${navVisible ? "translate-y-0" : "-translate-y-full"}`}>
