@@ -195,12 +195,12 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-8 py-10">
+      <div className="max-w-6xl mx-auto px-4 py-6 md:px-8 md:py-10">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Calendar</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Calendar</h1>
             <p className="text-gray-400 mt-1.5 text-sm">
               {aiRefreshing
                 ? <span className="text-teal-500 font-medium animate-pulse">Syncing AI schedule...</span>
@@ -239,7 +239,7 @@ export default function CalendarPage() {
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
 
           {/* Month nav */}
-          <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+          <div className="flex items-center justify-between px-4 py-4 md:px-8 md:py-5 border-b border-gray-100">
             <button id="prev-month-btn" onClick={prevMonth} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-all">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
@@ -250,14 +250,14 @@ export default function CalendarPage() {
           </div>
 
           {/* Day headers */}
-          <div className="grid grid-cols-7 border-b border-gray-100">
+          <div className="overflow-x-auto">
+          <div className="grid grid-cols-7 border-b border-gray-100 min-w-[560px]">
             {DAYS.map(d => (
               <div key={d} className="py-3 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">{d}</div>
             ))}
           </div>
 
-          {/* Grid */}
-          <div className="grid grid-cols-7">
+          <div className="grid grid-cols-7 min-w-[560px]">
             {cells.map((cell, idx) => {
               const dayEvts = cell.current ? eventsForDay(cell.day) : [];
               const isSelected = selected === cell.day && cell.current;
@@ -317,7 +317,8 @@ export default function CalendarPage() {
               );
             })}
           </div>
-        </div>
+          </div>{/* end overflow-x-auto */}
+        </div>{/* end calendar card */}
       </div>
 
       {/* Day popup modal */}

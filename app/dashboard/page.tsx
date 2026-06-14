@@ -111,10 +111,10 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="max-w-6xl mx-auto px-4 py-6 md:px-6 md:py-10">
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
               {mounted ? greeting() : "Good day"}, {userName} 👋
@@ -129,7 +129,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             {mounted && analysedAt && !loadingAI && (
-              <span className="text-xs text-gray-400">
+              <span className="hidden sm:inline text-xs text-gray-400">
                 Analysed {analysedAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
               </span>
             )}

@@ -149,13 +149,13 @@ export default function AnalyticsPage() {
   ] : [];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto flex flex-col gap-7">
 
         {/* ── Header ── */}
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Analytics</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Analytics</h1>
             <p className="text-gray-400 mt-1.5 text-sm">Track your study productivity and patterns</p>
           </div>
           <div className="flex items-center bg-white border border-gray-200 rounded-2xl p-1 gap-1 shadow-sm">

@@ -397,12 +397,12 @@ const handleExportData = async () => {
   // Render
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto flex flex-col gap-7">
 
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Settings</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Settings</h1>
           <p className="text-gray-400 mt-1.5 text-sm">Manage your profile, study preferences, and account</p>
         </div>
 

@@ -208,12 +208,12 @@ export default function TasksPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-8 py-10">
+      <div className="max-w-4xl mx-auto px-4 py-6 md:px-8 md:py-10">
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-10">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Tasks</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Tasks</h1>
             <p className="text-gray-400 mt-2 text-sm">
               <span className="text-gray-700 font-semibold">{counts.Pending}</span> pending &nbsp;·&nbsp;
               <span className="text-gray-700 font-semibold">{counts.Completed}</span> completed
