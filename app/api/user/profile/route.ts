@@ -30,7 +30,7 @@ export async function PUT(req: NextRequest) {
     const user = await verifySession(req);
     if (!user) return unauthorized();
 
-    const { name, email, timezone } = await req.json();
+    const { name, email } = await req.json();
 
     const updated = await prisma.user.update({
       where: { id: user.uid },

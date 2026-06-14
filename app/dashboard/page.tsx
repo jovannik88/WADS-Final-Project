@@ -25,20 +25,6 @@ interface Analytics {
   // total tasks derived from task list
 }
 
-interface AIPrioritized {
-  taskId: number;
-  aiScore: number;
-  aiReason: string;
-  suggestedOrder: number;
-}
-
-interface ScheduleBlock {
-  startHour: number;
-  endHour: number;
-  taskTitle: string;
-  blockType: "focus" | "break" | "buffer";
-  durationMin: number;
-}
 
 const PRIORITY_BAR: Record<string, string> = {
   HIGH: "bg-red-400",
@@ -58,10 +44,6 @@ function formatHour(h: number) {
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
-function formatFocusTime(minutes: number) {
-  if (minutes < 60) return `${minutes}m`;
-  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
-}
 
 function greeting() {
   const h = new Date().getHours();
@@ -77,6 +59,7 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [userName, setUserName] = useState("there");
+  void setUserName;
   const [loadingData, setLoadingData] = useState(true);
   const [mounted, setMounted] = useState(false);
 

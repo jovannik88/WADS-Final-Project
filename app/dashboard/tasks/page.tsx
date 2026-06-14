@@ -58,10 +58,6 @@ const EMPTY_FORM: TaskFormState = {
   title: "", description: "", subject: "", priority: "MEDIUM", dueDate: "", estimatedMins: "",
 };
 
-// Signal to calendar/dashboard that tasks changed and AI schedule needs refresh
-function markTasksDirty() {
-  try { sessionStorage.setItem("tasks_dirty", "1"); } catch { return; }
-}
 
 export default function TasksPage() {
   const router = useRouter();

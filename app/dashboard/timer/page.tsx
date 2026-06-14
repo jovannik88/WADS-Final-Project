@@ -212,7 +212,7 @@ export default function TimerPage() {
   const pct = total > 0 ? Math.min(100, Math.round((elapsed / total) * 100)) : 0;
   const sc = focus ? SC[subj(focus)] ?? DC : DC;
   // How many minutes are left in the session window (for the banner)
-  const remainingMins = active ? Math.max(0, Math.ceil((new Date(active.endTime).getTime() - Date.now()) / 60000)) : null;
+  const _remainingMins = active ? Math.max(0, Math.ceil((new Date(active.endTime).getTime() - Date.now()) / 60000)) : null;
 
   const handleStart = () => {
     if (!canStart) return;

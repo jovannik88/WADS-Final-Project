@@ -68,7 +68,7 @@ interface SessionSnapshot {
 
 export default function AIAssistantPage() {
   const router = useRouter();
-  const { timerRunning, scheduleExpired, refreshFromDB } = useAiSync();
+  const { timerRunning: _timerRunning, scheduleExpired: _scheduleExpired, refreshFromDB } = useAiSync();
   const [uid, setUid] = useState<string | null>(null);
 
   // SSR-safe defaults: sessionStorage is loaded after mount to avoid hydration mismatch

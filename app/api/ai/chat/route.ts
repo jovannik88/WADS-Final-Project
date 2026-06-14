@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { verifySession, unauthorized, badRequest, serverError, parseBody } from "@/lib/api-helpers";
+import { verifySession, unauthorized, badRequest, parseBody } from "@/lib/api-helpers";
 import { getGeminiModel, buildSystemPrompt } from "@/lib/gemini";
 import { getOrGenerateAiSuggestions } from "@/lib/ai-cache";
 import { Status } from "@prisma/client";

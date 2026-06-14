@@ -189,7 +189,7 @@ export default function CalendarPage() {
   for (let d = 1; d <= daysInMonth; d++)  cells.push({ day: d, current: true });
   while (cells.length % 7 !== 0)          cells.push({ day: cells.length - firstDay - daysInMonth + 1, current: false });
 
-  const selectedEvents = selected ? eventsForDay(selected) : [];
+  const _selectedEvents = selected ? eventsForDay(selected) : [];
   const monthEventCount = events.length;
 
   return (
