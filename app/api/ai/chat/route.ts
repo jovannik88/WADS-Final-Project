@@ -19,6 +19,7 @@ const chatSchema = z.object({
     )
     .optional()
     .default([]),
+  clientTime: z.string().optional(), // browser's local ISO time
 });
 
 export async function POST(req: NextRequest) {
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     const parsed = await parseBody(req, chatSchema);
     if (!parsed.success) return badRequest("Invalid request body");
-    const { message, history } = parsed.data;
+    const { message, history, clientTime } = parsed.data;
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey || apiKey === PLACEHOLDER_KEY) {
@@ -84,7 +85,8 @@ export async function POST(req: NextRequest) {
         title: e.title,
         startTime: e.startTime.toISOString(),
         endTime: e.endTime.toISOString(),
-      }))
+      })),
+      clientTime  // pass browser's local time
     );
 
     const gemini = getGeminiModel();

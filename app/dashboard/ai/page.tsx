@@ -159,7 +159,7 @@ export default function AIAssistantPage() {
       const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userText, history }),
+        body: JSON.stringify({ message: userText, history, clientTime: new Date().toISOString() }),
       });
 
       if (res.status === 401) { router.push("/login"); return; }

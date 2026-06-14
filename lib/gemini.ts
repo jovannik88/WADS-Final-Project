@@ -34,9 +34,10 @@ export function buildSystemPrompt(
   tasks: Array<{ id: number; title: string; subject: string | null; priority: string; dueDate: string | null; status: string; aiScore: number | null }>,
   prioritizationSummary: string,
   scheduleSummary: string,
-  todayEvents: Array<{ title: string; startTime: string; endTime: string }> = []
+  todayEvents: Array<{ title: string; startTime: string; endTime: string }> = [],
+  clientNow?: string  // ISO string from the browser — use this for correct local time
 ): string {
-  const now = new Date();
+  const now = clientNow ? new Date(clientNow) : new Date();
   const localTime = now.toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" });
   const hh = String(now.getHours()).padStart(2, "0");
   const mm = String(now.getMinutes()).padStart(2, "0");
