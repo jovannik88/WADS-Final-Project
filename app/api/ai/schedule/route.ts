@@ -109,13 +109,13 @@ export async function POST(req: NextRequest) {
     const targetStart = useTomorrow ? tmrStart : dayStart;
     const targetEnd   = useTomorrow ? tmrEnd   : dayEnd;
 
-    // Save schedule to calendar (always fresh)
+    // Delete ALL future AI study blocks so stale blocks from previous runs are cleaned up
     await prisma.event.deleteMany({
       where: {
         userId: user.uid,
         eventType: EventType.STUDY_BLOCK,
         aiGenerated: true,
-        startTime: { gte: targetStart, lte: targetEnd },
+        startTime: { gte: dayStart },
       },
     });
 

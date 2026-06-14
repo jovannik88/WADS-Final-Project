@@ -90,6 +90,8 @@ export function AiSyncProvider({ children }: { children: ReactNode }) {
   const [timerRunning, setTimerRunning] = useState(false);
   const generatingRef = useRef(false);
   const autoExpireRef = useRef(false);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // Fetch current state from DB without writing anything
   const refreshFromDB = useCallback(async () => {
@@ -102,12 +104,12 @@ export function AiSyncProvider({ children }: { children: ReactNode }) {
       const newScheduleBlocks: ScheduleBlock[] =
         schRes.status === "fulfilled" && schRes.value.ok
           ? (await schRes.value.json()).blocks ?? []
-          : state.scheduleBlocks;
+          : stateRef.current.scheduleBlocks;
 
       const newPrioritized: AIPrioritized[] =
         priRes.status === "fulfilled" && priRes.value.ok
           ? (await priRes.value.json()).prioritized ?? []
-          : state.prioritized;
+          : stateRef.current.prioritized;
 
       const next: AiState = {
         prioritized: newPrioritized,
@@ -118,7 +120,8 @@ export function AiSyncProvider({ children }: { children: ReactNode }) {
       setState(next);
       saveToSession(next);
     } catch { return; }
-  }, [state.prioritized, state.scheduleBlocks]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Generate a new AI schedule and save it to DB
   const generateAndSave = useCallback(async (source: "tasks" | "events") => {
@@ -140,12 +143,12 @@ export function AiSyncProvider({ children }: { children: ReactNode }) {
       const newScheduleBlocks: ScheduleBlock[] =
         schResult.status === "fulfilled" && schResult.value.ok
           ? (await schResult.value.json()).blocks ?? []
-          : state.scheduleBlocks;
+          : stateRef.current.scheduleBlocks;
 
       const newPrioritized: AIPrioritized[] =
         source === "tasks" && priResult?.status === "fulfilled" && priResult.value.ok
           ? (await priResult.value.json()).prioritized ?? []
-          : state.prioritized;
+          : stateRef.current.prioritized;
 
       const next: AiState = {
         prioritized: newPrioritized,
@@ -161,7 +164,8 @@ export function AiSyncProvider({ children }: { children: ReactNode }) {
     } finally {
       generatingRef.current = false;
     }
-  }, [state.prioritized, state.scheduleBlocks]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Public: notify that a task or event changed, triggers a new schedule generation
   const notifyChange = useCallback((source: "tasks" | "events" = "tasks") => {
