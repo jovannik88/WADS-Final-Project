@@ -126,7 +126,7 @@ export default function SettingsPage() {
   const [notifSession,  setNotifSession]  = useState(true);
   const [notifAI,       setNotifAI]       = useState(true);
   const [notifStreak,   setNotifStreak]   = useState(false);
-  const [notifEmail,    setNotifEmail]    = useState(false);
+
   const [deadlineHours, setDeadlineHours] = useState("24");
 
   // Account state
@@ -149,7 +149,7 @@ const [accountMeta, setAccountMeta] = useState({
       sessionReminders: boolean;
       aiSuggestions: boolean;
       streakAlerts: boolean;
-      weeklySummary: boolean;
+
       deadlineLeadHours: number;
     }>("/api/user/notifications");
 
@@ -157,7 +157,7 @@ const [accountMeta, setAccountMeta] = useState({
       setNotifSession(notifRes.sessionReminders);
       setNotifAI(notifRes.aiSuggestions);
       setNotifStreak(notifRes.streakAlerts);
-      setNotifEmail(notifRes.weeklySummary);
+
 setDeadlineHours(String(notifRes.deadlineLeadHours));
       // Fetch profile + settings in parallel
       const [profileRes, settingsRes] = await Promise.all([
@@ -262,7 +262,7 @@ const handleSaveNotifications = async () => {
         sessionReminders: notifSession,
         aiSuggestions: notifAI,
         streakAlerts: notifStreak,
-        weeklySummary: notifEmail,
+
         deadlineLeadHours: Number(deadlineHours),
       }),
     });
@@ -495,17 +495,6 @@ const handleExportData = async () => {
                   </div>
                 </SectionCard>
 
-                <SectionCard title="Email Notifications" sub="Delivered to your registered email address">
-                  <div className="flex items-start justify-between gap-4 mb-5">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Weekly progress summary</p>
-                      <p className="text-xs text-gray-400 mt-0.5">Receive a weekly email with your study analytics and AI insights</p>
-                    </div>
-                    <Toggle value={notifEmail} onChange={setNotifEmail} />
-                  </div>
-
-                
-                </SectionCard>
 
                 <div className="flex justify-end">
                   <SaveButton onClick={handleSaveNotifications} label="Save Notifications" />
