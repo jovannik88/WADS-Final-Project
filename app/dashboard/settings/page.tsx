@@ -240,7 +240,6 @@ if (s) {
           preferredEndHour: endHour,
           pomodoroMins: pomodoroWork,
           shortBreakMins: pomodoroBreak,
-          timezone,
         }),
       });
       toast.success("Study preferences saved");
