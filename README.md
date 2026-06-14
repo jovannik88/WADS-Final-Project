@@ -23,6 +23,8 @@ Group Members :
 
 **https://e2526-wads-b4cc.csbihub.id/**
 
+📄 **API Documentation (Swagger):** https://e2526-wads-b4cc.csbihub.id/api-docs
+
 ---
 
 **Project Overview**
@@ -237,6 +239,158 @@ docker compose up --build
 | **Study Timer** | Pomodoro-style focus timer with session logging |
 | **Analytics** | Weekly productivity charts and study habit insights |
 | **Notifications** | In-app alerts for deadlines and AI-generated schedules |
+
+---
+
+## API Design
+
+### API Documentation (Swagger)
+
+📄 **Interactive Docs:** https://e2526-wads-b4cc.csbihub.id/api-docs
+
+---
+
+### API Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/session` | Create session (login) | No |
+| POST | `/api/logout` | Logout, clears session cookie | Yes |
+| POST | `/api/auth/send-reset-email` | Send password reset email | No |
+| GET | `/api/tasks` | List all tasks (filter by status/priority) | Yes |
+| POST | `/api/tasks` | Create a new task | Yes |
+| GET | `/api/tasks/{id}` | Get a single task | Yes |
+| PUT | `/api/tasks/{id}` | Update a task | Yes |
+| DELETE | `/api/tasks/{id}` | Delete a task | Yes |
+| GET | `/api/events` | List calendar events | Yes |
+| POST | `/api/events` | Create a calendar event | Yes |
+| PUT | `/api/events/{id}` | Update a user-created event | Yes |
+| DELETE | `/api/events/{id}` | Delete an event | Yes |
+| GET | `/api/notifications` | List notifications | Yes |
+| DELETE | `/api/notifications` | Clear all notifications | Yes |
+| PATCH | `/api/notifications/{id}` | Mark a notification as read | Yes |
+| DELETE | `/api/notifications/{id}` | Delete a notification | Yes |
+| PATCH | `/api/notifications/read-all` | Mark all notifications as read | Yes |
+| POST | `/api/notifications/check-sessions` | Check and trigger time-based notifications | Yes |
+| GET | `/api/analytics` | Get productivity analytics | Yes |
+| GET | `/api/settings` | Get user study settings | Yes |
+| PUT | `/api/settings` | Update study settings | Yes |
+| GET | `/api/user/profile` | Get user profile | Yes |
+| PUT | `/api/user/profile` | Update user profile | Yes |
+| GET | `/api/study-sessions` | List past study sessions | Yes |
+| POST | `/api/timer/complete` | Complete a session, save to DB, trigger AI feedback | Yes |
+| POST | `/api/ai/prioritize` | AI task prioritization | Yes |
+| POST | `/api/ai/schedule` | AI study schedule optimization | Yes |
+| POST | `/api/ai/chat` | AI assistant chat (multi-turn) | Yes |
+| POST | `/api/ai-optimize` | Trigger AI schedule regeneration and save to calendar | Yes |
+| GET | `/api/export` | Export user data (tasks, sessions, events) | Yes |
+| GET | `/api/user/notifications` | Get notification preferences for current user | Yes |
+
+---
+
+### Example Request & Response
+
+#### POST `/api/session` — Login
+
+**Request:**
+```json
+{
+  "idToken": "<firebase-id-token>"
+}
+```
+
+**Response `200`:**
+```json
+{
+  "success": true,
+  "user": {
+    "uid": "abc123",
+    "email": "user@example.com"
+  }
+}
+```
+
+---
+
+#### POST `/api/tasks` — Create Task
+
+**Request:**
+```json
+{
+  "title": "Finish WADS Final Report",
+  "subject": "WADS",
+  "priority": "HIGH",
+  "dueDate": "2026-06-20T23:59:00.000Z",
+  "estimatedMins": 120
+}
+```
+
+**Response `201`:**
+```json
+{
+  "task": {
+    "id": 42,
+    "title": "Finish WADS Final Report",
+    "subject": "WADS",
+    "priority": "HIGH",
+    "status": "PENDING",
+    "dueDate": "2026-06-20T23:59:00.000Z",
+    "estimatedMins": 120,
+    "aiScore": null,
+    "createdAt": "2026-06-15T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+#### POST `/api/ai/prioritize` — AI Task Prioritization
+
+**Request:** *(no body required, reads tasks from DB for authenticated user)*
+
+**Response `200`:**
+```json
+{
+  "tasks": [
+    {
+      "id": 42,
+      "title": "Finish WADS Final Report",
+      "aiScore": 91,
+      "suggestedOrder": 1,
+      "priority": "HIGH"
+    },
+    {
+      "id": 38,
+      "title": "Read Chapter 5",
+      "aiScore": 54,
+      "suggestedOrder": 2,
+      "priority": "MEDIUM"
+    }
+  ],
+  "summary": "Prioritized 2 tasks. Finish WADS Final Report is most urgent due to its upcoming deadline.",
+  "analyzedAt": "2026-06-15T00:00:00.000Z"
+}
+```
+
+---
+
+#### POST `/api/ai/chat` — AI Chat
+
+**Request:**
+```json
+{
+  "message": "What should I study first today?",
+  "history": [],
+  "clientTime": "2026-06-15T07:30:00+07:00"
+}
+```
+
+**Response `200`:**
+```json
+{
+  "reply": "Based on your tasks, I recommend starting with 'Finish WADS Final Report' since it is due in 5 days and rated HIGH priority. You have a 2-hour study block scheduled at 9:00 AM today."
+}
+```
 
 ---
 
