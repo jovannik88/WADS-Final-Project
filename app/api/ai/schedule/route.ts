@@ -140,14 +140,26 @@ export async function POST(req: NextRequest) {
         })),
       });
 
-      await prisma.notification.create({
-        data: {
+      const schedDateKey = targetDate.toISOString().slice(0, 10); // e.g. "2026-06-15"
+      const schedMarker = `[SCHED-${schedDateKey}]`;
+
+      const existingSchedNotif = await prisma.notification.findFirst({
+        where: {
           userId: user.uid,
-          title: useTomorrow ? "Tomorrow's Study Schedule Ready" : "Today's Study Schedule Ready",
-          body: schedule.summary,
-          type: "AI_ALERT",
+          body: { contains: schedMarker },
         },
       });
+
+      if (!existingSchedNotif) {
+        await prisma.notification.create({
+          data: {
+            userId: user.uid,
+            title: useTomorrow ? "Tomorrow's Study Schedule Ready" : "Today's Study Schedule Ready",
+            body: `${schedule.summary} ${schedMarker}`,
+            type: "AI_ALERT",
+          },
+        });
+      }
     }
 
     return NextResponse.json({ ...schedule, forTomorrow: useTomorrow }, { status: 200 });
