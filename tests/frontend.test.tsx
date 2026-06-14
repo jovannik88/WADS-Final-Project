@@ -37,6 +37,7 @@ jest.mock("sonner", () => ({
 
 // AI sync context
 const mockNotifyChange = jest.fn();
+const mockRefreshFromDB = jest.fn();
 jest.mock("@/lib/ai-sync-context", () => ({
   useAiSync: () => ({
     prioritized: [],
@@ -44,6 +45,7 @@ jest.mock("@/lib/ai-sync-context", () => ({
     analysedAt: null,
     refreshing: false,
     notifyChange: mockNotifyChange,
+    refreshFromDB: mockRefreshFromDB,
   }),
 }));
 
@@ -723,11 +725,11 @@ describe("DashboardPage — UI behaviour", () => {
     });
   });
 
-  test("Run AI Analysis button calls notifyChange", async () => {
+  test("Run AI Analysis button calls refreshFromDB", async () => {
     render(<DashboardPage />);
     await waitFor(() => screen.getByText("Run AI Analysis"));
     await user.click(screen.getByText("Run AI Analysis"));
-    expect(mockNotifyChange).toHaveBeenCalledWith("tasks");
+    expect(mockRefreshFromDB).toHaveBeenCalled();
   });
 
   test("redirects to login on 401", async () => {
