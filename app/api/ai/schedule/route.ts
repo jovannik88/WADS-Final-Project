@@ -44,10 +44,11 @@ export async function GET(req: NextRequest) {
         startHour,
         endHour,
         taskTitle: ev.title,
+        subject: null,
         blockType: "focus" as const,
         durationMin: Math.round((end.getTime() - start.getTime()) / 60000),
-        taskId: ev.taskId ?? undefined,
-        reason: ev.description ?? undefined,
+        taskId: ev.taskId ?? null,
+        reason: ev.description ?? "",
       };
     });
 
