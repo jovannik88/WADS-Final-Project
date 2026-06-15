@@ -615,7 +615,106 @@ erDiagram
     User ||--o| UserSettings : "has"
     User ||--o| AiCache : "has"
 ```
+---
+## AI FLOW
 
+```
+                        User Data
+              (tasks, sessions, settings, calendar)
+                              |
+          ┌───────────────────┼───────────────────┐
+          ▼                   ▼                   ▼
+  Task Prioritization   Schedule Optimizer   AI Chat Assistant
+  (ai-engine.ts)        (ai-engine.ts)       (Gemini 2.5 Flash)
+          |                   |                   |
+          ▼                   ▼                   ▼
+   Priority Scores       Study Blocks         Chat Response
+   aiScore 0–100         Focus + breaks       Context-aware
+   aiReason per task     Peak window          Task-aware reply
+          |                   |                   |
+          ▼                   ▼                   ▼
+  Task.aiScore saved    Events created        Shown in UI
+  Cached in AiCache     aiGenerated=true      No DB storage
+          |                   |
+          ▼                   ▼
+  AiCache (24h TTL)     Calendar view
+  taskHash invalidation  Blocks visible
+          |                   |
+          ▼                   ▼
+   Dashboard list        Study timer
+   Ordered by aiScore    Pomodoro sessions
+          |                   |
+          ▼                   ▼
+   Tasks updated         Session logged
+   Cache invalidated     Improves peak window
+          |
+          └──────────────────────────────────────┐
+                ↻ re-scores on next              │
+                  AI analysis request            │
+                        ▲                        │
+                        └────────────────────────┘
+```
+ 
+---
+ 
+### Feature 1 — Task Prioritization
+ 
+| Step | Detail |
+|---|---|
+| **Input** | All pending tasks (title, priority, dueDate, estimatedMins) |
+| **Processing** | `computePriorityScore()` in `lib/ai-engine.ts` — weights priority (HIGH=40, MEDIUM=20, LOW=5) + deadline urgency + estimatedMins bonus/penalty |
+| **Output** | `aiScore` (0–100) + `aiReason` string per task |
+| **Saved to DB** | `Task.aiScore`, `Task.aiReason` fields + full result in `AiCache` |
+| **Used in UI** | Dashboard task list ordered by `aiScore` descending |
+| **Cache** | `AiCache` stores result for 24h, invalidated when `taskHash` changes |
+ 
+---
+ 
+### Feature 2 — Schedule Optimizer
+ 
+| Step | Detail |
+|---|---|
+| **Input** | Pending tasks + past `StudySession` records + `UserSettings` (preferredStartHour, preferredEndHour, pomodoroMins) |
+| **Processing** | `optimizeSchedule()` in `lib/ai-engine.ts` — assigns focus blocks by priority, inserts breaks, detects peak window from session `focusScore` history |
+| **Output** | Array of blocks `{ startHour, endHour, taskTitle, durationMin, blockType }` + `peakWindow` string + `totalStudyMin` |
+| **Saved to DB** | `Event` records with `aiGenerated=true` and `taskId` reference |
+| **Used in UI** | Calendar view shows AI-generated study blocks |
+| **Feedback** | Completed `StudySession` records improve future `peakWindow` detection |
+ 
+---
+ 
+### Feature 3 — AI Chat Assistant
+ 
+| Step | Detail |
+|---|---|
+| **Input** | User message + conversation history + current task list injected into system prompt |
+| **Processing** | `lib/gemini.ts` sends request to Gemini 2.5 Flash API with task-aware system prompt |
+| **Output** | Natural language response aware of user's tasks and schedule |
+| **Saved to DB** | Nothing — responses are stateless |
+| **Used in UI** | Shown directly in the AI assistant chat panel |
+ 
+---
+ 
+### Cache Strategy
+ 
+```
+User triggers AI analysis
+        |
+        ▼
+Compute taskHash (SHA-256 of task IDs + priorities + dueDates)
+        |
+        ▼
+AiCache exists AND not expired AND hash matches?
+        |
+   Yes ─┴─ No
+   |          |
+   ▼          ▼
+Return     Run AI engine
+cached     Save to AiCache
+result     Set expiresAt = now + 24h
+```
+ 
+The cache ensures consistent AI suggestions throughout a work session while automatically refreshing when tasks actually change.
 ---
 
 ## Testing
