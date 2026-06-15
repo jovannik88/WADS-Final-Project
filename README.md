@@ -1075,19 +1075,42 @@ HTTPS is enforced in production. Session cookies are set with `secure: true` in 
 ### MANJAKAMANANA MAMY JEAN (Mamy32)
 
 **Features implemented:**
-- Write Here
+- Designed the overall UI/UX of the Study Planner application
+- Created the project mockups and wireframes used as the foundation for the final system design
+- Settings page — profile management, account preferences, notification preferences, and user settings (frontend + backend integration)
+- Password reset functionality — Firebase email-based password recovery workflow
+- Notification system — notification display, filtering, read/unread management, and notification interactions (frontend + backend integration)
+- Frontend integration and testing for Settings and Notifications features
+  UI bug fixes, component debugging, and user experience improvements across the application
+- Assisted with deployment verification and production environment testing
 
 **API endpoints handled:**
-- Write Here
+- PATCH /api/user/profile — Update user profile information
+- PATCH /api/user/settings — Update account and application preferences
+- GET /api/notifications — Retrieve user notifications
+- POST /api/notifications — Create notifications
+- PATCH /api/notifications/{id} — Update notification status
+- DELETE /api/notifications/{id} — Delete notifications
+- PATCH /api/notifications/read-all — Mark all notifications as read
+- DELETE /api/notifications — Clear all notifications
+- Firebase Authentication password reset and account management integration
 
 **Tests written:**
 - Contributed to AI engine test coverage
+- Assisted in frontend UI testing and validation
+- Performed user workflow testing for authentication, password reset, settings management, and notifications
+- Participated in frontend-backend integration testing
 
 **Security work:**
-- Write Here
+- Tested authentication and password recovery workflows
+- Verified secure handling of user profile and account management features
+- Assisted in validating protected user settings and notification operations
+- Tested user-specific access controls for settings and notifications
 
 **AI-related work:**
-- Write Here
+- Used AI to assist with debugging frontend and backend integration issues
+- Used AI to review code quality and identify implementation errors
+- Used AI to troubleshoot development and deployment issues
 
 ---
 
