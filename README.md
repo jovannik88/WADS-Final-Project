@@ -404,18 +404,85 @@ docker compose up --build
 
 ```
 WADS-Final-Project/
-├── app/                  # Next.js App Router pages and API routes
-│   ├── api/              # REST API route handlers
-│   └── dashboard/        # Dashboard pages (tasks, calendar, AI, etc.)
-├── components/           # Reusable React components
-├── lib/                  # Shared utilities
-│   ├── ai-engine.ts      # Deterministic schedule optimizer
-│   ├── ai-cache.ts       # Prioritization caching layer
-│   └── gemini.ts         # Gemini API client + system prompt
-├── prisma/               # Database schema and migrations
-├── public/               # Static assets
-├── Dockerfile            # Production Docker image
-└── docker-compose.yml    # Local dev with PostgreSQL
+├── app/                          # Next.js App Router
+│   ├── page.tsx                  # Landing page
+│   ├── layout.tsx                # Root layout (Toaster, metadata)
+│   ├── globals.css               # Global styles
+│   ├── login/                    # Login page
+│   ├── register/                 # Sign-up page
+│   ├── api-docs/                 # Swagger UI page (/api-docs)
+│   ├── admin/                    # Admin panel (lyonel@gmail.com only)
+│   │   ├── layout.tsx            # Admin sidebar layout
+│   │   ├── users/                # User management
+│   │   ├── analytics/            # System-wide analytics
+│   │   ├── notifications/        # Broadcast notifications
+│   │   └── ai-monitor/           # AI usage monitoring
+│   ├── dashboard/                # Main user dashboard
+│   │   ├── page.tsx              # Dashboard home
+│   │   ├── layout.tsx            # Dashboard sidebar + nav
+│   │   ├── tasks/                # Task manager
+│   │   ├── calendar/             # Calendar view
+│   │   ├── ai/                   # AI assistant chat
+│   │   ├── analytics/            # Productivity analytics
+│   │   ├── timer/                # Pomodoro study timer
+│   │   ├── notifications/        # In-app notifications
+│   │   └── settings/             # User preferences
+│   └── api/                      # REST API route handlers
+│       ├── session/              # Login session (POST)
+│       ├── logout/               # Logout (POST)
+│       ├── tasks/                # Tasks CRUD
+│       ├── events/               # Calendar events CRUD
+│       ├── notifications/        # Notifications CRUD
+│       ├── study-sessions/       # Study session history
+│       ├── timer/                # Complete timer session
+│       ├── analytics/            # Productivity stats
+│       ├── settings/             # User settings
+│       ├── user/                 # Profile + preferences
+│       ├── export/               # Data export
+│       ├── auth/                 # Password reset
+│       ├── ai-optimize/          # Trigger AI schedule generation
+│       ├── ai/                   # AI endpoints
+│       │   ├── prioritize/       # Task prioritization
+│       │   ├── schedule/         # Schedule optimization
+│       │   └── chat/             # AI chat assistant
+│       └── admin/                # Admin-only endpoints
+│           ├── users/            # List / delete / deactivate users
+│           ├── analytics/        # System-wide stats
+│           ├── ai-usage/         # AI monitoring
+│           └── notifications/    # Broadcast notifications
+│               └── broadcast/
+├── lib/                          # Shared server utilities
+│   ├── admin.ts                  # Admin email constant
+│   ├── ai-cache.ts               # AI result caching (24h TTL)
+│   ├── ai-engine.ts              # Deterministic schedule optimizer
+│   ├── ai-sync-context.tsx       # Client-side AI sync state
+│   ├── api-helpers.ts            # verifySession, sanitize, response helpers
+│   ├── auth.ts                   # Auth utilities
+│   ├── firebase-admin.ts         # Firebase Admin SDK init
+│   ├── firebase.ts               # Firebase client SDK init
+│   ├── gemini.ts                 # Gemini API client + system prompt
+│   ├── notify.ts                 # createNotification helper
+│   ├── prisma.ts                 # Prisma client singleton
+│   ├── swagger.ts                # OpenAPI 3.0 spec (manual)
+│   └── utils.ts                  # Misc utilities
+├── prisma/                       # Database
+│   ├── schema.prisma             # Data models and relations
+│   └── migrations/               # SQL migration history
+├── tests/                        # Automated test suite (476 tests)
+│   ├── unit.test.ts              # API route unit + Admin RBAC (71)
+│   ├── frontend.test.tsx         # UI component tests (74)
+│   ├── integration.test.ts       # API ↔ DB integration (27)
+│   ├── security.test.ts          # Security tests (44)
+│   ├── ai-engine.test.ts         # AI engine unit (25)
+│   ├── ai.test.ts                # AI input variations (64)
+│   ├── ai-consistency.test.ts    # AI consistency (70)
+│   ├── ai-failure.test.ts        # AI failure handling (51)
+│   └── ai-abuse.test.ts          # AI abuse & misuse (50)
+├── components/                   # Reusable React components
+├── public/                       # Static assets
+├── Dockerfile                    # Production Docker image
+├── docker-compose.yml            # Local dev with PostgreSQL
+└── .github/workflows/cicd.yml   # GitHub Actions CI/CD pipeline
 ```
 
 ## System Architecture
