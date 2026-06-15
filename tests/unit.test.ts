@@ -886,7 +886,7 @@ describe("PUT /api/user/profile", () => {
 
   test("updates profile and returns 200", async () => {
     mockedVerifySession.mockResolvedValueOnce(MOCK_USER);
-    mockedPrisma.user.update.mockResolvedValueOnce({
+    mockedPrisma.user.upsert.mockResolvedValueOnce({
       id: MOCK_USER.uid,
       name: "New Name",
       email: "new@example.com",
@@ -905,7 +905,7 @@ describe("PUT /api/user/profile", () => {
 
   test("returns 500 when prisma throws", async () => {
     mockedVerifySession.mockResolvedValueOnce(MOCK_USER);
-    mockedPrisma.user.update.mockRejectedValueOnce(new Error("db error"));
+    mockedPrisma.user.upsert.mockRejectedValueOnce(new Error("db error"));
 
     const req = makeReq("http://localhost/api/user/profile", {
       method: "PUT",
