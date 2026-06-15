@@ -85,7 +85,106 @@ The AI processes these factors to create an optimized study schedule, which will
 #### AI Model
 This feature will also use **Gemini API** or other **LLM-based APIs**. By allowing users to describe their productivity habits and preferences in natural language, the AI can generate more realistic and personalized schedules.
 
+## AI FLOW
 
+```
+                        User Data
+              (tasks, sessions, settings, calendar)
+                              |
+          ┌───────────────────┼───────────────────┐
+          ▼                   ▼                   ▼
+  Task Prioritization   Schedule Optimizer   AI Chat Assistant
+  (ai-engine.ts)        (ai-engine.ts)       (Gemini 2.5 Flash)
+          |                   |                   |
+          ▼                   ▼                   ▼
+   Priority Scores       Study Blocks         Chat Response
+   aiScore 0–100         Focus + breaks       Context-aware
+   aiReason per task     Peak window          Task-aware reply
+          |                   |                   |
+          ▼                   ▼                   ▼
+  Task.aiScore saved    Events created        Shown in UI
+  Cached in AiCache     aiGenerated=true      No DB storage
+          |                   |
+          ▼                   ▼
+  AiCache (24h TTL)     Calendar view
+  taskHash invalidation  Blocks visible
+          |                   |
+          ▼                   ▼
+   Dashboard list        Study timer
+   Ordered by aiScore    Pomodoro sessions
+          |                   |
+          ▼                   ▼
+   Tasks updated         Session logged
+   Cache invalidated     Improves peak window
+          |
+          └──────────────────────────────────────┐
+                ↻ re-scores on next              │
+                  AI analysis request            │
+                        ▲                        │
+                        └────────────────────────┘
+```
+ 
+---
+ 
+### Feature 1 — Task Prioritization
+ 
+| Step | Detail |
+|---|---|
+| **Input** | All pending tasks (title, priority, dueDate, estimatedMins) |
+| **Processing** | `computePriorityScore()` in `lib/ai-engine.ts` — weights priority (HIGH=40, MEDIUM=20, LOW=5) + deadline urgency + estimatedMins bonus/penalty |
+| **Output** | `aiScore` (0–100) + `aiReason` string per task |
+| **Saved to DB** | `Task.aiScore`, `Task.aiReason` fields + full result in `AiCache` |
+| **Used in UI** | Dashboard task list ordered by `aiScore` descending |
+| **Cache** | `AiCache` stores result for 24h, invalidated when `taskHash` changes |
+ 
+---
+ 
+### Feature 2 — Schedule Optimizer
+ 
+| Step | Detail |
+|---|---|
+| **Input** | Pending tasks + past `StudySession` records + `UserSettings` (preferredStartHour, preferredEndHour, pomodoroMins) |
+| **Processing** | `optimizeSchedule()` in `lib/ai-engine.ts` — assigns focus blocks by priority, inserts breaks, detects peak window from session `focusScore` history |
+| **Output** | Array of blocks `{ startHour, endHour, taskTitle, durationMin, blockType }` + `peakWindow` string + `totalStudyMin` |
+| **Saved to DB** | `Event` records with `aiGenerated=true` and `taskId` reference |
+| **Used in UI** | Calendar view shows AI-generated study blocks |
+| **Feedback** | Completed `StudySession` records improve future `peakWindow` detection |
+ 
+---
+ 
+### Feature 3 — AI Chat Assistant
+ 
+| Step | Detail |
+|---|---|
+| **Input** | User message + conversation history + current task list injected into system prompt |
+| **Processing** | `lib/gemini.ts` sends request to Gemini 2.5 Flash API with task-aware system prompt |
+| **Output** | Natural language response aware of user's tasks and schedule |
+| **Saved to DB** | Nothing — responses are stateless |
+| **Used in UI** | Shown directly in the AI assistant chat panel |
+ 
+---
+ 
+### Cache Strategy
+ 
+```
+User triggers AI analysis
+        |
+        ▼
+Compute taskHash (SHA-256 of task IDs + priorities + dueDates)
+        |
+        ▼
+AiCache exists AND not expired AND hash matches?
+        |
+   Yes ─┴─ No
+   |          |
+   ▼          ▼
+Return     Run AI engine
+cached     Save to AiCache
+result     Set expiresAt = now + 24h
+```
+ 
+The cache ensures consistent AI suggestions throughout a work session while automatically refreshing when tasks actually change.
+---
 ##
 
 
@@ -615,108 +714,217 @@ erDiagram
     User ||--o| UserSettings : "has"
     User ||--o| AiCache : "has"
 ```
----
-## AI FLOW
+# Security Implementation
 
+## 1. Authentication
+
+StudyFlow uses **Firebase Authentication + Firebase Admin SDK** for session-based authentication.
+
+### Flow
 ```
-                        User Data
-              (tasks, sessions, settings, calendar)
-                              |
-          ┌───────────────────┼───────────────────┐
-          ▼                   ▼                   ▼
-  Task Prioritization   Schedule Optimizer   AI Chat Assistant
-  (ai-engine.ts)        (ai-engine.ts)       (Gemini 2.5 Flash)
-          |                   |                   |
-          ▼                   ▼                   ▼
-   Priority Scores       Study Blocks         Chat Response
-   aiScore 0–100         Focus + breaks       Context-aware
-   aiReason per task     Peak window          Task-aware reply
-          |                   |                   |
-          ▼                   ▼                   ▼
-  Task.aiScore saved    Events created        Shown in UI
-  Cached in AiCache     aiGenerated=true      No DB storage
-          |                   |
-          ▼                   ▼
-  AiCache (24h TTL)     Calendar view
-  taskHash invalidation  Blocks visible
-          |                   |
-          ▼                   ▼
-   Dashboard list        Study timer
-   Ordered by aiScore    Pomodoro sessions
-          |                   |
-          ▼                   ▼
-   Tasks updated         Session logged
-   Cache invalidated     Improves peak window
-          |
-          └──────────────────────────────────────┐
-                ↻ re-scores on next              │
-                  AI analysis request            │
-                        ▲                        │
-                        └────────────────────────┘
+User logs in → Firebase issues ID token → POST /api/session
+→ Server verifies ID token via Firebase Admin SDK
+→ Server creates HttpOnly session cookie (14 days)
+→ All subsequent requests verified via session cookie
 ```
- 
----
- 
-### Feature 1 — Task Prioritization
- 
-| Step | Detail |
-|---|---|
-| **Input** | All pending tasks (title, priority, dueDate, estimatedMins) |
-| **Processing** | `computePriorityScore()` in `lib/ai-engine.ts` — weights priority (HIGH=40, MEDIUM=20, LOW=5) + deadline urgency + estimatedMins bonus/penalty |
-| **Output** | `aiScore` (0–100) + `aiReason` string per task |
-| **Saved to DB** | `Task.aiScore`, `Task.aiReason` fields + full result in `AiCache` |
-| **Used in UI** | Dashboard task list ordered by `aiScore` descending |
-| **Cache** | `AiCache` stores result for 24h, invalidated when `taskHash` changes |
- 
----
- 
-### Feature 2 — Schedule Optimizer
- 
-| Step | Detail |
-|---|---|
-| **Input** | Pending tasks + past `StudySession` records + `UserSettings` (preferredStartHour, preferredEndHour, pomodoroMins) |
-| **Processing** | `optimizeSchedule()` in `lib/ai-engine.ts` — assigns focus blocks by priority, inserts breaks, detects peak window from session `focusScore` history |
-| **Output** | Array of blocks `{ startHour, endHour, taskTitle, durationMin, blockType }` + `peakWindow` string + `totalStudyMin` |
-| **Saved to DB** | `Event` records with `aiGenerated=true` and `taskId` reference |
-| **Used in UI** | Calendar view shows AI-generated study blocks |
-| **Feedback** | Completed `StudySession` records improve future `peakWindow` detection |
- 
----
- 
-### Feature 3 — AI Chat Assistant
- 
-| Step | Detail |
-|---|---|
-| **Input** | User message + conversation history + current task list injected into system prompt |
-| **Processing** | `lib/gemini.ts` sends request to Gemini 2.5 Flash API with task-aware system prompt |
-| **Output** | Natural language response aware of user's tasks and schedule |
-| **Saved to DB** | Nothing — responses are stateless |
-| **Used in UI** | Shown directly in the AI assistant chat panel |
- 
----
- 
-### Cache Strategy
- 
+
+### Implementation
+```typescript
+// app/api/session/route.ts
+const decodedToken = await getAdminAuth().verifyIdToken(idToken, true);
+const sessionCookie = await getAdminAuth().createSessionCookie(idToken, { expiresIn });
+
+response.cookies.set("session", sessionCookie, {
+  httpOnly: true,                                    // not accessible via JS
+  secure: process.env.NODE_ENV === "production",     // HTTPS only in prod
+  sameSite: "lax",                                   // CSRF protection
+  path: "/",
+  maxAge: expiresIn / 1000,
+});
 ```
-User triggers AI analysis
-        |
-        ▼
-Compute taskHash (SHA-256 of task IDs + priorities + dueDates)
-        |
-        ▼
-AiCache exists AND not expired AND hash matches?
-        |
-   Yes ─┴─ No
-   |          |
-   ▼          ▼
-Return     Run AI engine
-cached     Save to AiCache
-result     Set expiresAt = now + 24h
+
+### Session Verification
+Every protected API route calls `verifySession()` before processing:
+```typescript
+// lib/api-helpers.ts
+export async function verifySession(req: NextRequest) {
+  const session = req.cookies.get("session")?.value;
+  if (!session) return null;
+  return await getAdminAuth().verifySessionCookie(session, true);
+}
 ```
- 
-The cache ensures consistent AI suggestions throughout a work session while automatically refreshing when tasks actually change.
+
 ---
 
+## 2. Authorization (Role-Based Access Control)
+
+The `User` model has a `role` field: `USER` or `ADMIN`.
+
+```prisma
+model User {
+  role Role @default(USER)
+}
+enum Role {
+  USER
+  ADMIN
+}
+```
+
+### User-level authorization
+All data endpoints verify the authenticated user owns the requested resource:
+```typescript
+// app/api/tasks/[id]/route.ts
+const task = await prisma.task.findFirst({
+  where: { id: taskId, userId: user.uid }  // user can only access their own tasks
+});
+if (!task) return notFound("Task");
+```
+
+### Admin-level authorization
+Admin routes check the user's role before granting access:
+```typescript
+// lib/admin.ts
+export async function requireAdmin(req: NextRequest) {
+  const user = await verifySession(req);
+  if (!user) return unauthorized();
+  const dbUser = await prisma.user.findUnique({ where: { id: user.uid } });
+  if (dbUser?.role !== "ADMIN") return unauthorized();
+  return dbUser;
+}
+```
+
+### IDOR Prevention
+Every database query includes `userId: user.uid` to prevent Insecure Direct Object Reference — users can never access another user's data by guessing IDs.
+
+---
+
+## 3. Input Validation
+
+All API inputs are validated using **Zod schemas** before reaching the database.
+
+```typescript
+// app/api/tasks/route.ts
+const TaskSchema = z.object({
+  title: z.string().min(1).max(200),
+  priority: z.enum(["HIGH", "MEDIUM", "LOW"]).optional(),
+  estimatedMins: z.number().min(1).max(600).optional(),
+  dueDate: z.string().datetime().optional(),
+});
+
+const parsed = TaskSchema.safeParse(body);
+if (!parsed.success) return badRequest("Invalid input");
+```
+
+Validated fields include:
+- Title: required, 1–200 characters
+- Priority: must be `HIGH`, `MEDIUM`, or `LOW`
+- EstimatedMins: must be between 1–600
+- DueDate: must be valid ISO datetime format
+- Status: must be `PENDING`, `IN_PROGRESS`, or `COMPLETED`
+
+---
+
+## 4. SQL / NoSQL Injection Prevention
+
+StudyFlow uses **Prisma ORM** which uses parameterized queries by default — user input is never interpolated directly into SQL strings.
+
+```typescript
+// Safe — Prisma parameterizes automatically
+const task = await prisma.task.findFirst({
+  where: {
+    id: taskId,       // parameterized
+    userId: user.uid  // parameterized
+  }
+});
+```
+
+Even if a user passes SQL injection payloads like `'; DROP TABLE tasks; --` as a task title, Prisma treats it as plain text data — it is never executed as SQL.
+
+---
+
+## 5. XSS Prevention
+
+All user-supplied string inputs are sanitized using `sanitizeString()` before being stored in the database:
+
+```typescript
+// lib/api-helpers.ts
+export function sanitizeString(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value
+    .replace(/<[^>]*>/g, "")  // strips all HTML tags
+    .trim()
+    .slice(0, 2000);           // truncates to max length
+}
+```
+
+Applied to all text fields before database writes:
+```typescript
+const title = sanitizeString(body.title);       // <script>alert(1)</script> → ""
+const description = sanitizeString(body.description);
+const subject = sanitizeString(body.subject);
+```
+
+This prevents stored XSS — malicious scripts injected into form fields are stripped before storage and can never be served back to other users.
+
+---
+
+## 6. CSRF Prevention
+
+StudyFlow uses two layers of CSRF protection:
+
+### Layer 1 — SameSite cookie
+The session cookie is set with `sameSite: "lax"` — browsers will not send it on cross-site POST requests initiated by third-party sites.
+
+### Layer 2 — HttpOnly cookie
+The session cookie is `httpOnly: true` — it cannot be read or manipulated by JavaScript, preventing cookie theft via XSS.
+
+### Layer 3 — Content-Type validation
+All mutation endpoints expect `Content-Type: application/json` — standard HTML form submissions (the classic CSRF vector) use `application/x-www-form-urlencoded` and are rejected.
+
+---
+
+## 7. Secure API Key Handling
+
+All sensitive credentials are stored as **environment variables** and never committed to the repository.
+
+| Secret | Storage | Usage |
+|---|---|---|
+| `FIREBASE_PRIVATE_KEY` | GitHub Secrets → container env | Firebase Admin SDK |
+| `FIREBASE_CLIENT_EMAIL` | GitHub Secrets → container env | Firebase Admin SDK |
+| `GEMINI_API_KEY` | GitHub Secrets → container env | Gemini AI API |
+| `DATABASE_URL` | GitHub Secrets → container env | Neon PostgreSQL |
+
+### .gitignore protection
+```
+.env
+.env.*
+!.env.example
+```
+
+### Runtime injection
+Secrets are injected at container runtime via Docker Compose `environment:` section — they are never baked into the Docker image at build time.
+
+### NEXT_PUBLIC_* separation
+Firebase client-side keys (`NEXT_PUBLIC_FIREBASE_*`) are intentionally public — they are baked into the frontend bundle at build time. They are protected by Firebase Security Rules, not by secrecy.
+
+Server-side secrets (`FIREBASE_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL`, `DATABASE_URL`, `GEMINI_API_KEY`) are never exposed to the browser.
+
+---
+
+## 8. Security Testing
+
+Security was verified with automated tests in `tests/security.test.ts` (44 tests):
+
+| Category | Tests |
+|---|---|
+| Authentication | 9 protected routes blocked without cookie, fake/malformed tokens rejected |
+| Authorization (IDOR) | Cannot access another user's tasks/events/notifications by guessing IDs |
+| XSS Prevention | 8 XSS payloads in all text fields — all stripped before storage |
+| SQL Injection | 8 SQL payloads in title/ID/query params — Prisma prevents all |
+| Input Validation | Title too long, negative values, invalid enums, null values all rejected |
+| Sensitive Data | No stack traces or DB internals in error responses |
+| Abuse Prevention | 10 rapid requests — server stays stable |
+---
 ## Testing
 
 
@@ -891,3 +1099,139 @@ npx jest tests/ai-consistency.test.ts
 npx jest tests/ai-failure.test.ts
 npx jest tests/ai-abuse.test.ts
 ```
+## 12. GitHub Contribution Summary
+ 
+---
+ 
+### Jovan Nikholas (jovannik88)
+ 
+**Features implemented:**
+- Firebase Authentication integration (login, register, Google sign-in, password reset)
+- Settings page — profile management, notification preferences, account deletion
+- Docker containerization — multi-stage Dockerfile, docker-compose.yml
+- CI/CD pipeline — GitHub Actions (quality → build → deploy)
+- Neon PostgreSQL migration and production database setup
+- VPS Setup (Configering Docker, cicd.yml)
+**API endpoints handled:**
+- `DELETE /api/user` — Delete user account
+**Tests written:**
+- `tests/unit.test.ts` — 63 API route unit tests
+- `tests/frontend.test.tsx` — 74 frontend UI tests
+- `tests/integration.test.ts` — 27 API ↔ Database integration tests
+- `tests/security.test.ts` — 44 security tests (XSS, SQL injection, auth, IDOR)
+- `tests/ai.test.ts` — 64 AI input variation tests
+- `tests/ai-consistency.test.ts` — 70 AI consistency and expected output tests
+- `tests/ai-failure.test.ts` — 51 AI failure handling tests
+- `tests/ai-abuse.test.ts` — 50 AI abuse and misuse tests
+**Security work:**
+- Configured HttpOnly, Secure, SameSite session cookies
+- Set up GitHub Secrets for secure environment variable handling
+- Wrote 44 automated security tests covering auth, IDOR, XSS, SQL injection
+**AI-related work:**
+- AI Help me to make the testing scripts, as well as reviewing my code if there is any erorr
+- It help me sets up github workflows cicd.yml, Dockerfile
+---
+ 
+### Lyonnel Judson Saputra (LyonelJS)
+ 
+**Features implemented:**
+- Write here
+**API endpoints handled:**
+- Write here
+**Tests written:**
+- Write Here
+**Security work:**
+- Write Here
+**AI-related work:**
+- Write Here
+---
+ 
+### MANJAKAMANANA MAMY JEAN (Mamy32)
+ 
+**Features implemented:**
+- Write Here
+**API endpoints handled:**
+- Write Here
+**Tests written:**
+- Contributed to AI engine test coverage
+**Security work:**
+- Write Here
+**AI-related work:**
+- Write Here
+ 
+## 13. AI Usage Disclosure
+ 
+| Tool | Purpose | Parts assisted |
+|---|---|---|
+| **Claude (Anthropic)** | Reviewing testing code , setting up VPS |
+| **Gemini 2.5 Flash (Google)** | In-app AI feature — task prioritization reasoning and schedule optimization | Runtime AI feature only, not development assistance |
+ 
+**Disclosure statement:**
+ 
+Claude (Anthropic) was used extensively during development to assist with:
+- helping testing, aswell creating payload for testing the AI
+All AI-assisted code was reviewed, understood, and modified by the team before being committed. The core application logic, database schema, UI components, and AI engine algorithms were designed and implemented by the team. AI tools were used as a development accelerator, not as a replacement for understanding.
+ 
+Gemini 2.5 Flash is used as a runtime feature within the application itself — it powers the AI chat assistant, task prioritization reasoning, and schedule optimization suggestions shown to end users.
+ 
+---
+ 
+## 14. Known Limitations & Future Improvements
+ 
+### Current Limitations
+ 
+**AI limitations:**
+- Task prioritization uses a deterministic scoring algorithm — not a true ML model. Scores are based on fixed weights (priority, deadline, estimated time) and do not learn from user behaviour over time
+- Schedule optimizer does not account for user energy levels beyond historical session focus scores
+- Gemini API has rate limits — heavy concurrent usage may result in delayed responses
+- AI cache is per-user only — no shared learning across users
+**Application limitations:**
+- No real-time collaboration features — multi-user study groups not supported
+- Notifications are in-app only — no push notifications or email alerts
+- Calendar view does not sync with external calendars (Google Calendar, iCal)
+- Study timer does not resume after page refresh
+- No offline support — requires active internet connection
+**Infrastructure limitations:**
+- Single VPS deployment — no horizontal scaling or load balancing
+- No automated database backups configured for Neon
+- Session cookie expires after 14 days — no refresh token mechanism
+### Possible Future Enhancements
+ 
+- **ML-based prioritization** — replace deterministic scoring with a model that learns from user completion patterns
+- **External calendar sync** — Google Calendar / iCal integration for importing classes and exams
+- **Push notifications** — browser push or email reminders for upcoming deadlines
+- **Study groups** — collaborative study sessions with shared task boards
+- **Mobile app** — React Native version for iOS and Android
+- **Offline mode** — service worker caching for basic functionality without internet
+- **Analytics export** — PDF/CSV export of productivity reports
+- **Voice input** — voice-to-text for adding tasks via AI chat
+### AI Limitations and Risks
+ 
+| Risk | Description | Mitigation |
+|---|---|---|
+| Hallucination | Gemini may give incorrect study advice | Responses are advisory only, not authoritative |
+| Prompt injection | Users may attempt to manipulate AI via task titles | Inputs sanitized before DB storage; engine scoring is deterministic |
+| API dependency | App degrades if Gemini API is unavailable | Graceful error handling — app functions without AI features |
+| Data privacy | Task content sent to Gemini API | Only task titles and metadata sent, no personal identifiable data beyond what Firebase already holds |
+| Cache staleness | AI scores may be outdated if tasks change rapidly | `taskHash` invalidates cache on any task change |
+ 
+---
+ 
+## 15. Final Declaration
+ 
+We declare that:
+ 
+- This project is our own original work, completed as part of the WADS final project requirement at BINUS University International
+- All AI tool usage has been honestly disclosed in Section 13 above
+- All group members have reviewed, understood, and can explain the system they contributed to
+- The codebase, architecture decisions, and design choices reflect the team's own understanding and judgment
+- Any external libraries, frameworks, and APIs used are properly attributed in the tech stack section
+**Signed by Group Members:**
+ 
+| Name | Student ID | GitHub |
+|---|---|---|
+| Jovan Nikholas | 2902641811 | @jovannik88 |
+| Lyonnel Judson Saputra | 2802505853 | @LyonelJS |
+| MANJAKAMANANA MAMY JEAN | 2902639832 | @Mamy32 |
+ 
+*BINUS University International — Web Application Development and Security (COMP6703001) — Class L4CC — June 2026*
