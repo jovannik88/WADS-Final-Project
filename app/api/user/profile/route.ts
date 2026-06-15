@@ -32,9 +32,14 @@ export async function PUT(req: NextRequest) {
 
     const { name, email } = await req.json();
 
-    const updated = await prisma.user.update({
+    const updated = await prisma.user.upsert({
       where: { id: user.uid },
-      data: { name, email},
+      update: { name, email },
+      create: {
+        id: user.uid,
+        email: email ?? user.email ?? "",
+        name: name ?? user.name ?? "",
+      },
     });
 
     return NextResponse.json({ user: updated }, { status: 200 });

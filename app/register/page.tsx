@@ -80,6 +80,12 @@ export default function RegisterPage() {
 
       const idToken = await result.user.getIdToken();
       await createSession(idToken);
+      
+      await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), email }),
+      });
 
       toast.success("Account created successfully! 🎉");
       router.push("/dashboard");
