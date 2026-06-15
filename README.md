@@ -2,9 +2,7 @@
 
 Course Code: COMP6703001
 
-
 Course Name: Web Application Development and Security
-
 
 Institution: BINUS University International
 
@@ -18,19 +16,28 @@ Group Members :
 | Lyonnel Judson Saputra | 2802505853| LyonelJS|
 | MANJAKAMANANA MAMY JEAN |2902639832| Mamy32| 
 
+---
 
-## 🌐 Live Application
+## 2. Instructor & Repository Access
 
-**https://e2526-wads-b4cc.csbihub.id/**
+This repository must be shared with:
 
-📄 **API Documentation (Swagger):** https://e2526-wads-b4cc.csbihub.id/api-docs
+- Instructor: Ida Bagus Kerthyayana Manuaba
+  - Email: imanuaba@binus.edu
+  - GitHub: bagzcode
+- Instructor Assistant: Juwono
+  - Email: juwono@binus.edu
+  - GitHub: Juwono136
 
 ---
 
-**Project Overview**
+## 3. Project Overview
 
 Project Title: Study planner and productivity tracker
 
+Project Domain: Study Planner & Productivity Tracker
+
+### 3.1 Problem Statement
 
 The purpose of this project is to help students plan their study sessions by organizing assignments and test deadline reminders that can be viewed directly in their calendar. Every completed or accomplished task will be tracked in a dashboard, allowing students to monitor their progress and productivity.
 
@@ -38,294 +45,7 @@ This web application will also include a notification feature that reminds users
 
 Additionally, the program will include two AI-powered functions designed to help students determine which tasks they should prioritize. These AI features will assist in organizing student schedules and improving task prioritization.
 
-## AI Integration Layer
-
-The AI Integration Layer is part of the back-end service layer and includes the following intelligent features:
-
----
-
-### Smart Task Prioritization
-
-This AI feature determines which task should be completed first based on several key parameters:
-
-- **Importance**  
-  The weight of the task, such as how impactful it is toward the final grade.
-
-- **Urgency**  
-  How close the task is to its deadline.
-
-- **Effort**  
-  The level of difficulty required to complete the task.
-
-- **Dependency**  
-  Whether completing a task is required before starting or finishing other tasks.
-
-The AI evaluates these parameters to generate a prioritized task list. The results will be displayed on the frontend of the web application.
-
-#### AI Model
-This feature will use **Gemini API** or other **LLM-based APIs**. LLMs allow users to describe task parameters using natural language, making prioritization more accurate and personalized.
-
----
-
-### Study Schedule Optimization
-
-This AI feature helps students generate the most optimal study schedule by analyzing three main factors:
-
-- **Hard Blocks**  
-  Fixed activities that cannot be changed, such as classes or mandatory events.
-
-- **Tasks**  
-  Assignments, projects, or study activities that need to be completed.
-
-- **Energy Levels**  
-  Identifies when the user is most productive (e.g., morning or night).
-
-The AI processes these factors to create an optimized study schedule, which will be displayed on the frontend of the web application.
-
-#### AI Model
-This feature will also use **Gemini API** or other **LLM-based APIs**. By allowing users to describe their productivity habits and preferences in natural language, the AI can generate more realistic and personalized schedules.
-
-## AI FLOW
-
-```
-                        User Data
-              (tasks, sessions, settings, calendar)
-                              |
-          ┌───────────────────┼───────────────────┐
-          ▼                   ▼                   ▼
-  Task Prioritization   Schedule Optimizer   AI Chat Assistant
-  (ai-engine.ts)        (ai-engine.ts)       (Gemini 2.5 Flash)
-          |                   |                   |
-          ▼                   ▼                   ▼
-   Priority Scores       Study Blocks         Chat Response
-   aiScore 0–100         Focus + breaks       Context-aware
-   aiReason per task     Peak window          Task-aware reply
-          |                   |                   |
-          ▼                   ▼                   ▼
-  Task.aiScore saved    Events created        Shown in UI
-  Cached in AiCache     aiGenerated=true      No DB storage
-          |                   |
-          ▼                   ▼
-  AiCache (24h TTL)     Calendar view
-  taskHash invalidation  Blocks visible
-          |                   |
-          ▼                   ▼
-   Dashboard list        Study timer
-   Ordered by aiScore    Pomodoro sessions
-          |                   |
-          ▼                   ▼
-   Tasks updated         Session logged
-   Cache invalidated     Improves peak window
-          |
-          └──────────────────────────────────────┐
-                ↻ re-scores on next              │
-                  AI analysis request            │
-                        ▲                        │
-                        └────────────────────────┘
-```
- 
----
- 
-### Feature 1 — Task Prioritization
- 
-| Step | Detail |
-|---|---|
-| **Input** | All pending tasks (title, priority, dueDate, estimatedMins) |
-| **Processing** | `computePriorityScore()` in `lib/ai-engine.ts` — weights priority (HIGH=40, MEDIUM=20, LOW=5) + deadline urgency + estimatedMins bonus/penalty |
-| **Output** | `aiScore` (0–100) + `aiReason` string per task |
-| **Saved to DB** | `Task.aiScore`, `Task.aiReason` fields + full result in `AiCache` |
-| **Used in UI** | Dashboard task list ordered by `aiScore` descending |
-| **Cache** | `AiCache` stores result for 24h, invalidated when `taskHash` changes |
- 
----
- 
-### Feature 2 — Schedule Optimizer
- 
-| Step | Detail |
-|---|---|
-| **Input** | Pending tasks + past `StudySession` records + `UserSettings` (preferredStartHour, preferredEndHour, pomodoroMins) |
-| **Processing** | `optimizeSchedule()` in `lib/ai-engine.ts` — assigns focus blocks by priority, inserts breaks, detects peak window from session `focusScore` history |
-| **Output** | Array of blocks `{ startHour, endHour, taskTitle, durationMin, blockType }` + `peakWindow` string + `totalStudyMin` |
-| **Saved to DB** | `Event` records with `aiGenerated=true` and `taskId` reference |
-| **Used in UI** | Calendar view shows AI-generated study blocks |
-| **Feedback** | Completed `StudySession` records improve future `peakWindow` detection |
- 
----
- 
-### Feature 3 — AI Chat Assistant
- 
-| Step | Detail |
-|---|---|
-| **Input** | User message + conversation history + current task list injected into system prompt |
-| **Processing** | `lib/gemini.ts` sends request to Gemini 2.5 Flash API with task-aware system prompt |
-| **Output** | Natural language response aware of user's tasks and schedule |
-| **Saved to DB** | Nothing — responses are stateless |
-| **Used in UI** | Shown directly in the AI assistant chat panel |
- 
----
- 
-### Cache Strategy
- 
-```
-User triggers AI analysis
-        |
-        ▼
-Compute taskHash (SHA-256 of task IDs + priorities + dueDates)
-        |
-        ▼
-AiCache exists AND not expired AND hash matches?
-        |
-   Yes ─┴─ No
-   |          |
-   ▼          ▼
-Return     Run AI engine
-cached     Save to AiCache
-result     Set expiresAt = now + 24h
-```
- 
-The cache ensures consistent AI suggestions throughout a work session while automatically refreshing when tasks actually change.
----
-##
-
-
-## System Architecture
-
-### 3.1 Front-end layer (Next.js)
-
-Basically, the front-end is built using next.js react framework and is responsible for:
-
-- rendering the user interface such as dashboard,study planer, task forms etc…
-- communicating with the back-end (Node.js)
-- displaying Ai-generated recommendation and classifications.
-
-The Front End, will get the data from the Backend Layer by fetching it
-
-This front-end does not directly access the database and Ai services, all interactions are handled across secure back-end API.
-
----
-
-### 3.2 Back-end layer (Node.js)
-
-The back-end is implemented using node.js and follows a Restful API architecture.
-
-Responsibilities include:
-
-- Handling HTTP requests (GET, POST, PUT, DELETE)
-- Authentication using JWT
-- Authorization with role-based access control
-- Business logic implementation
-- Input validation and output sanitization
-- Secure interaction with the database using Prisma
-- Orchestration of AI services
-
-The Backend is acting as a Database Management System (DBMS), the function is to utilize database data to be displayed in the front end.
-
----
-
-### 3.3 Database layer (PostgresSQL with prisma)
-
-The database layer uses PostgresSQL with prisma ORM
-
-Responsibilities include:
-
-- For storing the users, study tasks, study sessions and productivity logs
-- Secure database access restricted to the back-end only
-- Enforcing relational data integrity
-
-> **Note:** In the final implementation the front-end (Next.js) and back-end API routes are unified into a single **Next.js full-stack application**. The API layer is served via Next.js Route Handlers (`app/api/`) and communicates directly with PostgreSQL through Prisma ORM, eliminating the need for a separate Node.js server.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Language | TypeScript |
-| Styling | Tailwind CSS |
-| Auth | Firebase Authentication + Firebase Admin SDK |
-| Database | PostgreSQL 16 |
-| ORM | Prisma 6 |
-| AI | Google Gemini 2.5 Flash (`@google/generative-ai`) |
-| Containerization | Docker + Docker Compose |
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 20+
-- PostgreSQL 16 (or use Docker Compose)
-- A [Google AI Studio](https://aistudio.google.com/) API key
-- A Firebase project with Authentication enabled
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/jovannik88/WADS-Final-Project.git
-cd WADS-Final-Project
-```
-
-### 2. Install dependencies
-
-```bash
-npm install
-```
-
-### 3. Configure environment variables
-
-Create a `.env` file at the project root (copy from `.env.example` if provided):
-
-```env
-# PostgreSQL
-DATABASE_URL="postgresql://user:password@localhost:5432/studyflow"
-
-# Firebase (client-side — prefix NEXT_PUBLIC_)
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-
-# Firebase Admin (server-side)
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY=
-
-# Gemini AI
-GEMINI_API_KEY=
-```
-
-### 4. Run database migrations
-
-```bash
-npx prisma migrate deploy
-npx prisma generate
-```
-
-### 5. Start the development server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-### Run with Docker Compose
-
-Starts both the PostgreSQL database and the Next.js app:
-
-```bash
-docker compose up --build
-```
-
----
-
-## Features
+### 3.2 Solution Overview
 
 | Feature | Description |
 |---|---|
@@ -341,7 +61,115 @@ docker compose up --build
 
 ---
 
-## API Design
+## 4. Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| Auth | Firebase Authentication + Firebase Admin SDK |
+| Database | PostgreSQL 16 (Neon) |
+| ORM | Prisma 6 |
+| AI | Google Gemini 2.5 Flash (`@google/generative-ai`) |
+| Containerization | Docker + Docker Compose |
+| Version Control | GitHub |
+| CI/CD | GitHub Actions |
+| Deployment | VPS via Docker + Cloudflare Domain |
+| API | REST API via Next.js Route Handlers (`app/api/`) |
+
+---
+
+## 5. System Architecture
+
+### 5.1 Front-end layer (Next.js)
+
+The front-end is built using the Next.js React framework (App Router) and is responsible for:
+
+- Rendering the user interface for dashboard, task manager, calendar, AI chat, timer, notifications
+- Communicating with the back-end via REST API calls using `fetch`
+- Displaying AI-generated recommendations and study schedules
+- Handling Firebase Authentication on the client side (sign-in, Google OAuth)
+
+The front-end does not directly access the database or AI services — all interactions go through the secure Next.js API routes.
+
+---
+
+### 5.2 Back-end layer (Next.js API Routes)
+
+The back-end is built inside the **same Next.js application** using **Route Handlers** (`app/api/`). There is no separate Node.js server. All API routes run server-side within Next.js.
+
+Responsibilities include:
+
+- Handling HTTP requests (GET, POST, PUT, DELETE) and returning JSON responses
+- Session-based authentication using **Firebase Admin SDK** + **HttpOnly session cookies**
+- Role-based access control (USER vs ADMIN)
+- Input validation using **Zod schemas**
+- Output sanitization to prevent XSS
+- Database access via **Prisma ORM** (parameterized queries — no SQL injection)
+- AI orchestration — calling the Gemini API and the deterministic AI engine
+
+---
+
+### 5.3 Database layer (PostgreSQL with Prisma)
+
+The database layer uses **PostgreSQL 16** (hosted on Neon) with **Prisma ORM**.
+
+Responsibilities include:
+
+- Storing users, tasks, events, study sessions, notifications, settings, and AI cache
+- Secure access restricted to server-side API routes only — never exposed to the browser
+- Enforcing relational data integrity via Prisma schema constraints
+
+---
+
+
+### 5.4 Architecture Diagram
+
+```mermaid
+flowchart TD
+    subgraph Client["Browser (Next.js Frontend)"]
+        UI["Pages & Components\nDashboard / Tasks / Calendar / AI / Timer"]
+        FC["Firebase Client SDK\nEmail + Google Auth"]
+    end
+
+    subgraph Server["Next.js Server (App Router)"]
+        API["API Routes\n/api/tasks /api/events /api/ai/* /api/admin/*"]
+        FA["Firebase Admin SDK\nSession cookie verification"]
+        PRISMA["Prisma ORM\nType-safe DB queries"]
+        AI_LIB["AI Engine\nlib/gemini.ts + lib/ai-engine.ts"]
+    end
+
+    subgraph External["External Services"]
+        FIREBASE["Firebase Auth\nUser identity"]
+        GEMINI["Google Gemini API\nTask prioritization / schedule / chat"]
+        DB["PostgreSQL\nNeon cloud database"]
+    end
+
+    subgraph DevOps["DevOps"]
+        GH["GitHub Repository"]
+        CI["GitHub Actions CI/CD"]
+        DOCKER["Docker + docker-compose"]
+        DEPLOY["Live Deployment\ne2526-wads-b4cc.csbihub.id"]
+    end
+
+    UI -->|"Firebase sign-in"| FC
+    FC -->|"POST /api/session with idToken"| API
+    UI -->|"Authenticated API calls with session cookie"| API
+    API -->|"Verify session cookie"| FA
+    FA -->|"Validate with"| FIREBASE
+    API -->|"DB queries"| PRISMA
+    PRISMA -->|"SQL"| DB
+    API -->|"AI requests"| AI_LIB
+    AI_LIB -->|"Gemini API calls"| GEMINI
+    GH --> CI
+    CI --> DOCKER
+    DOCKER --> DEPLOY
+```
+
+---
+
+## 6. API Design
 
 ### API Documentation (Swagger)
 
@@ -499,137 +327,7 @@ docker compose up --build
 
 ---
 
-## Project Structure
-
-```
-WADS-Final-Project/
-├── app/                          # Next.js App Router
-│   ├── page.tsx                  # Landing page
-│   ├── layout.tsx                # Root layout (Toaster, metadata)
-│   ├── globals.css               # Global styles
-│   ├── login/                    # Login page
-│   ├── register/                 # Sign-up page
-│   ├── api-docs/                 # Swagger UI page (/api-docs)
-│   ├── admin/                    # Admin panel (lyonel@gmail.com only)
-│   │   ├── layout.tsx            # Admin sidebar layout
-│   │   ├── users/                # User management
-│   │   ├── analytics/            # System-wide analytics
-│   │   ├── notifications/        # Broadcast notifications
-│   │   └── ai-monitor/           # AI usage monitoring
-│   ├── dashboard/                # Main user dashboard
-│   │   ├── page.tsx              # Dashboard home
-│   │   ├── layout.tsx            # Dashboard sidebar + nav
-│   │   ├── tasks/                # Task manager
-│   │   ├── calendar/             # Calendar view
-│   │   ├── ai/                   # AI assistant chat
-│   │   ├── analytics/            # Productivity analytics
-│   │   ├── timer/                # Pomodoro study timer
-│   │   ├── notifications/        # In-app notifications
-│   │   └── settings/             # User preferences
-│   └── api/                      # REST API route handlers
-│       ├── session/              # Login session (POST)
-│       ├── logout/               # Logout (POST)
-│       ├── tasks/                # Tasks CRUD
-│       ├── events/               # Calendar events CRUD
-│       ├── notifications/        # Notifications CRUD
-│       ├── study-sessions/       # Study session history
-│       ├── timer/                # Complete timer session
-│       ├── analytics/            # Productivity stats
-│       ├── settings/             # User settings
-│       ├── user/                 # Profile + preferences
-│       ├── export/               # Data export
-│       ├── auth/                 # Password reset
-│       ├── ai-optimize/          # Trigger AI schedule generation
-│       ├── ai/                   # AI endpoints
-│       │   ├── prioritize/       # Task prioritization
-│       │   ├── schedule/         # Schedule optimization
-│       │   └── chat/             # AI chat assistant
-│       └── admin/                # Admin-only endpoints
-│           ├── users/            # List / delete / deactivate users
-│           ├── analytics/        # System-wide stats
-│           ├── ai-usage/         # AI monitoring
-│           └── notifications/    # Broadcast notifications
-│               └── broadcast/
-├── lib/                          # Shared server utilities
-│   ├── admin.ts                  # Admin email constant
-│   ├── ai-cache.ts               # AI result caching (24h TTL)
-│   ├── ai-engine.ts              # Deterministic schedule optimizer
-│   ├── ai-sync-context.tsx       # Client-side AI sync state
-│   ├── api-helpers.ts            # verifySession, sanitize, response helpers
-│   ├── auth.ts                   # Auth utilities
-│   ├── firebase-admin.ts         # Firebase Admin SDK init
-│   ├── firebase.ts               # Firebase client SDK init
-│   ├── gemini.ts                 # Gemini API client + system prompt
-│   ├── notify.ts                 # createNotification helper
-│   ├── prisma.ts                 # Prisma client singleton
-│   ├── swagger.ts                # OpenAPI 3.0 spec (manual)
-│   └── utils.ts                  # Misc utilities
-├── prisma/                       # Database
-│   ├── schema.prisma             # Data models and relations
-│   └── migrations/               # SQL migration history
-├── tests/                        # Automated test suite (476 tests)
-│   ├── unit.test.ts              # API route unit + Admin RBAC (71)
-│   ├── frontend.test.tsx         # UI component tests (74)
-│   ├── integration.test.ts       # API ↔ DB integration (27)
-│   ├── security.test.ts          # Security tests (44)
-│   ├── ai-engine.test.ts         # AI engine unit (25)
-│   ├── ai.test.ts                # AI input variations (64)
-│   ├── ai-consistency.test.ts    # AI consistency (70)
-│   ├── ai-failure.test.ts        # AI failure handling (51)
-│   └── ai-abuse.test.ts          # AI abuse & misuse (50)
-├── components/                   # Reusable React components
-├── public/                       # Static assets
-├── Dockerfile                    # Production Docker image
-├── docker-compose.yml            # Local dev with PostgreSQL
-└── .github/workflows/cicd.yml   # GitHub Actions CI/CD pipeline
-```
-
-## System Architecture
-
-```mermaid
-flowchart TD
-    subgraph Client["Browser (Next.js Frontend)"]
-        UI["Pages & Components\nDashboard / Tasks / Calendar / AI / Timer"]
-        FC["Firebase Client SDK\nEmail + Google Auth"]
-    end
-
-    subgraph Server["Next.js Server (App Router)"]
-        API["API Routes\n/api/tasks /api/events /api/ai/* /api/admin/*"]
-        FA["Firebase Admin SDK\nSession cookie verification"]
-        PRISMA["Prisma ORM\nType-safe DB queries"]
-        AI_LIB["AI Engine\nlib/gemini.ts + lib/ai-engine.ts"]
-    end
-
-    subgraph External["External Services"]
-        FIREBASE["Firebase Auth\nUser identity"]
-        GEMINI["Google Gemini API\nTask prioritization / schedule / chat"]
-        DB["PostgreSQL\nNeon cloud database"]
-    end
-
-    subgraph DevOps["DevOps"]
-        GH["GitHub Repository"]
-        CI["GitHub Actions CI/CD"]
-        DOCKER["Docker + docker-compose"]
-        DEPLOY["Live Deployment\ne2526-wads-b4cc.csbihub.id"]
-    end
-
-    UI -->|"Firebase sign-in"| FC
-    FC -->|"POST /api/session with idToken"| API
-    UI -->|"Authenticated API calls with session cookie"| API
-    API -->|"Verify session cookie"| FA
-    FA -->|"Validate with"| FIREBASE
-    API -->|"DB queries"| PRISMA
-    PRISMA -->|"SQL"| DB
-    API -->|"AI requests"| AI_LIB
-    AI_LIB -->|"Gemini API calls"| GEMINI
-    GH --> CI
-    CI --> DOCKER
-    DOCKER --> DEPLOY
-```
-
----
-
-## Database Schema (ERD)
+## 7. Database Design
 
 ```mermaid
 erDiagram
@@ -714,13 +412,177 @@ erDiagram
     User ||--o| UserSettings : "has"
     User ||--o| AiCache : "has"
 ```
-# Security Implementation
 
-## 1. Authentication
+---
+
+## 8. AI Features
+
+### 8.1 AI Feature List
+
+| AI Feature | Purpose | AI Type |
+|---|---|---|
+| **Smart Task Prioritization** | Scores and ranks tasks (0–100) based on urgency, importance, effort, and deadline proximity so students know what to work on first | Recommendation |
+| **Study Schedule Optimization** | Generates an optimized daily study schedule by analyzing pending tasks, existing calendar events, and past study session focus scores | Recommendation |
+
+---
+
+### AI Integration Layer
+
+
+The AI Integration Layer is part of the back-end service layer and includes the following intelligent features:
+
+---
+
+### Smart Task Prioritization
+
+This AI feature determines which task should be completed first based on several key parameters:
+
+- **Importance**  
+  The weight of the task, such as how impactful it is toward the final grade.
+
+- **Urgency**  
+  How close the task is to its deadline.
+
+- **Effort**  
+  The level of difficulty required to complete the task.
+
+- **Dependency**  
+  Whether completing a task is required before starting or finishing other tasks.
+
+The AI evaluates these parameters to generate a prioritized task list. The results will be displayed on the frontend of the web application.
+
+#### AI Model
+This feature will use **Gemini API** or other **LLM-based APIs**. LLMs allow users to describe task parameters using natural language, making prioritization more accurate and personalized.
+
+---
+
+### Study Schedule Optimization
+
+This AI feature helps students generate the most optimal study schedule by analyzing three main factors:
+
+- **Hard Blocks**  
+  Fixed activities that cannot be changed, such as classes or mandatory events.
+
+- **Tasks**  
+  Assignments, projects, or study activities that need to be completed.
+
+- **Energy Levels**  
+  Identifies when the user is most productive (e.g., morning or night).
+
+The AI processes these factors to create an optimized study schedule, which will be displayed on the frontend of the web application.
+
+#### AI Model
+This feature will also use **Gemini API** or other **LLM-based APIs**. By allowing users to describe their productivity habits and preferences in natural language, the AI can generate more realistic and personalized schedules.
+
+### AI FLOW
+
+```
+                        User Data
+              (tasks, sessions, settings, calendar)
+                              |
+          ┌───────────────────┼───────────────────┐
+          ▼                   ▼                   ▼
+  Task Prioritization   Schedule Optimizer   AI Chat Assistant
+  (ai-engine.ts)        (ai-engine.ts)       (Gemini 2.5 Flash)
+          |                   |                   |
+          ▼                   ▼                   ▼
+   Priority Scores       Study Blocks         Chat Response
+   aiScore 0–100         Focus + breaks       Context-aware
+   aiReason per task     Peak window          Task-aware reply
+          |                   |                   |
+          ▼                   ▼                   ▼
+  Task.aiScore saved    Events created        Shown in UI
+  Cached in AiCache     aiGenerated=true      No DB storage
+          |                   |
+          ▼                   ▼
+  AiCache (24h TTL)     Calendar view
+  taskHash invalidation  Blocks visible
+          |                   |
+          ▼                   ▼
+   Dashboard list        Study timer
+   Ordered by aiScore    Pomodoro sessions
+          |                   |
+          ▼                   ▼
+   Tasks updated         Session logged
+   Cache invalidated     Improves peak window
+          |
+          └──────────────────────────────────────┐
+                ↻ re-scores on next              │
+                  AI analysis request            │
+                        ▲                        │
+                        └────────────────────────┘
+```
+
+---
+
+### Feature 1 — Task Prioritization
+
+| Step | Detail |
+|---|---|
+| **Input** | All pending tasks (title, priority, dueDate, estimatedMins) |
+| **Processing** | `computePriorityScore()` in `lib/ai-engine.ts` — weights priority (HIGH=40, MEDIUM=20, LOW=5) + deadline urgency + estimatedMins bonus/penalty |
+| **Output** | `aiScore` (0–100) + `aiReason` string per task |
+| **Saved to DB** | `Task.aiScore`, `Task.aiReason` fields + full result in `AiCache` |
+| **Used in UI** | Dashboard task list ordered by `aiScore` descending |
+| **Cache** | `AiCache` stores result for 24h, invalidated when `taskHash` changes |
+
+---
+
+### Feature 2 — Schedule Optimizer
+
+| Step | Detail |
+|---|---|
+| **Input** | Pending tasks + past `StudySession` records + `UserSettings` (preferredStartHour, preferredEndHour, pomodoroMins) |
+| **Processing** | `optimizeSchedule()` in `lib/ai-engine.ts` — assigns focus blocks by priority, inserts breaks, detects peak window from session `focusScore` history |
+| **Output** | Array of blocks `{ startHour, endHour, taskTitle, durationMin, blockType }` + `peakWindow` string + `totalStudyMin` |
+| **Saved to DB** | `Event` records with `aiGenerated=true` and `taskId` reference |
+| **Used in UI** | Calendar view shows AI-generated study blocks |
+| **Feedback** | Completed `StudySession` records improve future `peakWindow` detection |
+
+---
+
+### Feature 3 — AI Chat Assistant
+
+| Step | Detail |
+|---|---|
+| **Input** | User message + conversation history + current task list injected into system prompt |
+| **Processing** | `lib/gemini.ts` sends request to Gemini 2.5 Flash API with task-aware system prompt |
+| **Output** | Natural language response aware of user's tasks and schedule |
+| **Saved to DB** | Nothing — responses are stateless |
+| **Used in UI** | Shown directly in the AI assistant chat panel |
+
+---
+
+### Cache Strategy
+
+```
+User triggers AI analysis
+        |
+        ▼
+Compute taskHash (SHA-256 of task IDs + priorities + dueDates)
+        |
+        ▼
+AiCache exists AND not expired AND hash matches?
+        |
+   Yes ─┴─ No
+   |          |
+   ▼          ▼
+Return     Run AI engine
+cached     Save to AiCache
+result     Set expiresAt = now + 24h
+```
+
+The cache ensures consistent AI suggestions throughout a work session while automatically refreshing when tasks actually change.
+
+---
+
+## 9. Security Implementation
+
+### 1. Authentication
 
 StudyFlow uses **Firebase Authentication + Firebase Admin SDK** for session-based authentication.
 
-### Flow
+#### Flow
 ```
 User logs in → Firebase issues ID token → POST /api/session
 → Server verifies ID token via Firebase Admin SDK
@@ -728,7 +590,7 @@ User logs in → Firebase issues ID token → POST /api/session
 → All subsequent requests verified via session cookie
 ```
 
-### Implementation
+#### Implementation
 ```typescript
 // app/api/session/route.ts
 const decodedToken = await getAdminAuth().verifyIdToken(idToken, true);
@@ -743,7 +605,7 @@ response.cookies.set("session", sessionCookie, {
 });
 ```
 
-### Session Verification
+#### Session Verification
 Every protected API route calls `verifySession()` before processing:
 ```typescript
 // lib/api-helpers.ts
@@ -756,7 +618,7 @@ export async function verifySession(req: NextRequest) {
 
 ---
 
-## 2. Authorization (Role-Based Access Control)
+### 2. Authorization (Role-Based Access Control)
 
 The `User` model has a `role` field: `USER` or `ADMIN`.
 
@@ -770,7 +632,7 @@ enum Role {
 }
 ```
 
-### User-level authorization
+#### User-level authorization
 All data endpoints verify the authenticated user owns the requested resource:
 ```typescript
 // app/api/tasks/[id]/route.ts
@@ -780,7 +642,7 @@ const task = await prisma.task.findFirst({
 if (!task) return notFound("Task");
 ```
 
-### Admin-level authorization
+#### Admin-level authorization
 Admin routes check the user's role before granting access:
 ```typescript
 // lib/admin.ts
@@ -793,12 +655,12 @@ export async function requireAdmin(req: NextRequest) {
 }
 ```
 
-### IDOR Prevention
+#### IDOR Prevention
 Every database query includes `userId: user.uid` to prevent Insecure Direct Object Reference — users can never access another user's data by guessing IDs.
 
 ---
 
-## 3. Input Validation
+### 3. Input Validation
 
 All API inputs are validated using **Zod schemas** before reaching the database.
 
@@ -824,7 +686,7 @@ Validated fields include:
 
 ---
 
-## 4. SQL / NoSQL Injection Prevention
+### 4. SQL / NoSQL Injection Prevention
 
 StudyFlow uses **Prisma ORM** which uses parameterized queries by default — user input is never interpolated directly into SQL strings.
 
@@ -842,7 +704,7 @@ Even if a user passes SQL injection payloads like `'; DROP TABLE tasks; --` as a
 
 ---
 
-## 5. XSS Prevention
+### 5. XSS Prevention
 
 All user-supplied string inputs are sanitized using `sanitizeString()` before being stored in the database:
 
@@ -868,22 +730,22 @@ This prevents stored XSS — malicious scripts injected into form fields are str
 
 ---
 
-## 6. CSRF Prevention
+### 6. CSRF Prevention
 
 StudyFlow uses two layers of CSRF protection:
 
-### Layer 1 — SameSite cookie
+#### Layer 1 — SameSite cookie
 The session cookie is set with `sameSite: "lax"` — browsers will not send it on cross-site POST requests initiated by third-party sites.
 
-### Layer 2 — HttpOnly cookie
+#### Layer 2 — HttpOnly cookie
 The session cookie is `httpOnly: true` — it cannot be read or manipulated by JavaScript, preventing cookie theft via XSS.
 
-### Layer 3 — Content-Type validation
+#### Layer 3 — Content-Type validation
 All mutation endpoints expect `Content-Type: application/json` — standard HTML form submissions (the classic CSRF vector) use `application/x-www-form-urlencoded` and are rejected.
 
 ---
 
-## 7. Secure API Key Handling
+### 7. Secure API Key Handling
 
 All sensitive credentials are stored as **environment variables** and never committed to the repository.
 
@@ -894,24 +756,24 @@ All sensitive credentials are stored as **environment variables** and never comm
 | `GEMINI_API_KEY` | GitHub Secrets → container env | Gemini AI API |
 | `DATABASE_URL` | GitHub Secrets → container env | Neon PostgreSQL |
 
-### .gitignore protection
+#### .gitignore protection
 ```
 .env
 .env.*
 !.env.example
 ```
 
-### Runtime injection
+#### Runtime injection
 Secrets are injected at container runtime via Docker Compose `environment:` section — they are never baked into the Docker image at build time.
 
-### NEXT_PUBLIC_* separation
+#### NEXT_PUBLIC_* separation
 Firebase client-side keys (`NEXT_PUBLIC_FIREBASE_*`) are intentionally public — they are baked into the frontend bundle at build time. They are protected by Firebase Security Rules, not by secrecy.
 
 Server-side secrets (`FIREBASE_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL`, `DATABASE_URL`, `GEMINI_API_KEY`) are never exposed to the browser.
 
 ---
 
-## 8. Security Testing
+### 8. Security Testing
 
 Security was verified with automated tests in `tests/security.test.ts` (44 tests):
 
@@ -924,9 +786,10 @@ Security was verified with automated tests in `tests/security.test.ts` (44 tests
 | Input Validation | Title too long, negative values, invalid enums, null values all rejected |
 | Sensitive Data | No stack traces or DB internals in error responses |
 | Abuse Prevention | 10 rapid requests — server stays stable |
----
-## Testing
 
+---
+
+## 10. Testing Documentation
 
 ### Overview
 
@@ -1099,12 +962,41 @@ npx jest tests/ai-consistency.test.ts
 npx jest tests/ai-failure.test.ts
 npx jest tests/ai-abuse.test.ts
 ```
-## 12. GitHub Contribution Summary
- 
+
 ---
- 
+
+## 11. Deployment & Production Setup
+
+## 🌐 Live Application
+
+**https://e2526-wads-b4cc.csbihub.id/**
+
+📄 **API Documentation (Swagger):** https://e2526-wads-b4cc.csbihub.id/api-docs
+
+### Docker Setup
+
+- Dockerfile included ✓
+- docker-compose.yml included ✓
+
+### Production Environment
+
+All sensitive credentials are stored as environment variables and never committed to the repository. Secrets are injected at container runtime via Docker Compose `environment:` section — they are never baked into the Docker image at build time.
+
+| Secret | Storage | Usage |
+|---|---|---|
+| `FIREBASE_PRIVATE_KEY` | GitHub Secrets → container env | Firebase Admin SDK |
+| `FIREBASE_CLIENT_EMAIL` | GitHub Secrets → container env | Firebase Admin SDK |
+| `GEMINI_API_KEY` | GitHub Secrets → container env | Gemini AI API |
+| `DATABASE_URL` | GitHub Secrets → container env | Neon PostgreSQL |
+
+HTTPS is enforced in production. Session cookies are set with `secure: true` in production, ensuring they are only transmitted over HTTPS.
+
+---
+
+## 12. GitHub Contribution Summary
+
 ### Jovan Nikholas (jovannik88)
- 
+
 **Features implemented:**
 - Firebase Authentication integration (login, register, Google sign-in, password reset)
 - Settings page — profile management, notification preferences, account deletion
@@ -1112,8 +1004,10 @@ npx jest tests/ai-abuse.test.ts
 - CI/CD pipeline — GitHub Actions (quality → build → deploy)
 - Neon PostgreSQL migration and production database setup
 - VPS Setup (Configering Docker, cicd.yml)
+
 **API endpoints handled:**
 - `DELETE /api/user` — Delete user account
+
 **Tests written:**
 - `tests/unit.test.ts` — 63 API route unit tests
 - `tests/frontend.test.tsx` — 74 frontend UI tests
@@ -1123,80 +1017,122 @@ npx jest tests/ai-abuse.test.ts
 - `tests/ai-consistency.test.ts` — 70 AI consistency and expected output tests
 - `tests/ai-failure.test.ts` — 51 AI failure handling tests
 - `tests/ai-abuse.test.ts` — 50 AI abuse and misuse tests
+
 **Security work:**
 - Configured HttpOnly, Secure, SameSite session cookies
 - Set up GitHub Secrets for secure environment variable handling
 - Wrote 44 automated security tests covering auth, IDOR, XSS, SQL injection
+
 **AI-related work:**
 - AI Help me to make the testing scripts, as well as reviewing my code if there is any erorr
 - It help me sets up github workflows cicd.yml, Dockerfile
+
 ---
- 
+
 ### Lyonnel Judson Saputra (LyonelJS)
- 
+
 **Features implemented:**
-- Write here
+- Set up the initial Next.js project structure and App Router routing
+- Dashboard page — overview stats, task summary, AI suggestions (frontend + backend)
+- Calendar page — monthly view, AI-generated study blocks, event creation (frontend + backend)
+- Study Timer page — Pomodoro-style focus timer, session logging (frontend + backend)
+- AI Assistant page — multi-turn chat with Gemini, context-aware responses (frontend + backend)
+- Notifications page — in-app alerts, read/unread, filter tabs, clear all (frontend + backend)
+- Admin panel — users, analytics, broadcast notifications, AI monitor (all 4 pages + all API routes)
+
 **API endpoints handled:**
-- Write here
+- `GET /api/analytics` — Productivity stats (study hours, task completion, focus scores)
+- `GET /api/events`, `POST /api/events`, `DELETE /api/events/{id}` — Calendar events
+- `POST /api/timer/complete` — Save study session and trigger AI feedback
+- `GET /api/study-sessions` — Study session history
+- `POST /api/ai/prioritize` — AI task prioritization
+- `POST /api/ai/schedule` — AI schedule optimization
+- `POST /api/ai/chat` — AI chat assistant
+- `POST /api/ai-optimize` — Generate and save AI schedule to calendar
+- `GET /api/notifications`, `POST /api/notifications`, `PATCH /api/notifications/{id}`, `DELETE /api/notifications/{id}`, `PATCH /api/notifications/read-all`, `DELETE /api/notifications`, `POST /api/notifications/check-sessions` — Full notifications system
+- `GET /api/admin/users`, `DELETE /api/admin/users/{uid}`, `PATCH /api/admin/users/{uid}` — Admin user management
+- `GET /api/admin/analytics` — System-wide stats for admin
+- `POST /api/admin/notifications/broadcast` — Broadcast notification to all users
+- `GET /api/admin/ai-usage` — AI usage monitoring
+
 **Tests written:**
-- Write Here
+- 8 admin RBAC tests added to `tests/unit.test.ts` — unauthenticated and non-admin blocked
+- Swagger API documentation (`lib/swagger.ts` + `/api-docs` page) — documents all endpoints
+
 **Security work:**
-- Write Here
+- Role-based access control — all admin routes require `role === ADMIN` before any action
+- Admin access restricted to a single authorized email, verified on every request
+- Input sanitization on all user submitted data (task titles, chat messages, notification content)
+- All dashboard and AI endpoints verify session before responding
+
 **AI-related work:**
-- Write Here
+- Used AI to brainstorm the overall system architecture and feature breakdown
+- Used AI for debugging UI and API issues during development
+- Used AI as a checklist tool to verify all project requirements were met
+
 ---
- 
+
 ### MANJAKAMANANA MAMY JEAN (Mamy32)
- 
+
 **Features implemented:**
 - Write Here
+
 **API endpoints handled:**
 - Write Here
+
 **Tests written:**
 - Contributed to AI engine test coverage
+
 **Security work:**
 - Write Here
+
 **AI-related work:**
 - Write Here
- 
+
+---
+
 ## 13. AI Usage Disclosure
- 
+
 | Tool | Purpose | Parts assisted |
 |---|---|---|
-| **Claude (Anthropic)** | Reviewing testing code , setting up VPS |
+| **Claude (Anthropic)** | Reviewing testing code , setting up VPS | |
 | **Gemini 2.5 Flash (Google)** | In-app AI feature — task prioritization reasoning and schedule optimization | Runtime AI feature only, not development assistance |
- 
+
 **Disclosure statement:**
- 
+
 Claude (Anthropic) was used extensively during development to assist with:
 - helping testing, aswell creating payload for testing the AI
+
 All AI-assisted code was reviewed, understood, and modified by the team before being committed. The core application logic, database schema, UI components, and AI engine algorithms were designed and implemented by the team. AI tools were used as a development accelerator, not as a replacement for understanding.
- 
+
 Gemini 2.5 Flash is used as a runtime feature within the application itself — it powers the AI chat assistant, task prioritization reasoning, and schedule optimization suggestions shown to end users.
- 
+
 ---
- 
+
 ## 14. Known Limitations & Future Improvements
- 
+
 ### Current Limitations
- 
+
 **AI limitations:**
 - Task prioritization uses a deterministic scoring algorithm — not a true ML model. Scores are based on fixed weights (priority, deadline, estimated time) and do not learn from user behaviour over time
 - Schedule optimizer does not account for user energy levels beyond historical session focus scores
 - Gemini API has rate limits — heavy concurrent usage may result in delayed responses
 - AI cache is per-user only — no shared learning across users
+
 **Application limitations:**
 - No real-time collaboration features — multi-user study groups not supported
 - Notifications are in-app only — no push notifications or email alerts
 - Calendar view does not sync with external calendars (Google Calendar, iCal)
 - Study timer does not resume after page refresh
 - No offline support — requires active internet connection
+
 **Infrastructure limitations:**
 - Single VPS deployment — no horizontal scaling or load balancing
 - No automated database backups configured for Neon
 - Session cookie expires after 14 days — no refresh token mechanism
+
 ### Possible Future Enhancements
- 
+
 - **ML-based prioritization** — replace deterministic scoring with a model that learns from user completion patterns
 - **External calendar sync** — Google Calendar / iCal integration for importing classes and exams
 - **Push notifications** — browser push or email reminders for upcoming deadlines
@@ -1205,8 +1141,9 @@ Gemini 2.5 Flash is used as a runtime feature within the application itself — 
 - **Offline mode** — service worker caching for basic functionality without internet
 - **Analytics export** — PDF/CSV export of productivity reports
 - **Voice input** — voice-to-text for adding tasks via AI chat
+
 ### AI Limitations and Risks
- 
+
 | Risk | Description | Mitigation |
 |---|---|---|
 | Hallucination | Gemini may give incorrect study advice | Responses are advisory only, not authoritative |
@@ -1214,24 +1151,196 @@ Gemini 2.5 Flash is used as a runtime feature within the application itself — 
 | API dependency | App degrades if Gemini API is unavailable | Graceful error handling — app functions without AI features |
 | Data privacy | Task content sent to Gemini API | Only task titles and metadata sent, no personal identifiable data beyond what Firebase already holds |
 | Cache staleness | AI scores may be outdated if tasks change rapidly | `taskHash` invalidates cache on any task change |
- 
+
 ---
- 
+
 ## 15. Final Declaration
- 
+
 We declare that:
- 
+
 - This project is our own original work, completed as part of the WADS final project requirement at BINUS University International
 - All AI tool usage has been honestly disclosed in Section 13 above
 - All group members have reviewed, understood, and can explain the system they contributed to
 - The codebase, architecture decisions, and design choices reflect the team's own understanding and judgment
 - Any external libraries, frameworks, and APIs used are properly attributed in the tech stack section
+
 **Signed by Group Members:**
- 
+
 | Name | Student ID | GitHub |
 |---|---|---|
 | Jovan Nikholas | 2902641811 | @jovannik88 |
 | Lyonnel Judson Saputra | 2802505853 | @LyonelJS |
 | MANJAKAMANANA MAMY JEAN | 2902639832 | @Mamy32 |
- 
+
 *BINUS University International — Web Application Development and Security (COMP6703001) — Class L4CC — June 2026*
+
+---
+
+## 16. Setup Instructions
+
+### Prerequisites
+
+- Node.js 20+
+- PostgreSQL 16 (or use Docker Compose)
+- A [Google AI Studio](https://aistudio.google.com/) API key
+- A Firebase project with Authentication enabled
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/jovannik88/WADS-Final-Project.git
+cd WADS-Final-Project
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure environment variables
+
+Create a `.env` file at the project root (copy from `.env.example` if provided):
+
+```env
+# PostgreSQL
+DATABASE_URL="postgresql://user:password@localhost:5432/studyflow"
+
+# Firebase (client-side — prefix NEXT_PUBLIC_)
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+
+# Firebase Admin (server-side)
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
+
+# Gemini AI
+GEMINI_API_KEY=
+```
+
+### 4. Run database migrations
+
+```bash
+npx prisma migrate deploy
+npx prisma generate
+```
+
+### 5. Start the development server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 17. Deployment Instructions
+
+### Run with Docker Compose
+
+Starts both the PostgreSQL database and the Next.js app:
+
+```bash
+docker compose up --build
+```
+
+---
+
+## 18. Presentation Video
+
+📹 **YouTube:** [add link here]
+
+> 6–8 minute walkthrough of the application and its features. Includes face, voice, and captions. No code explanation.
+
+---
+
+## Project Structure
+
+```
+WADS-Final-Project/
+├── app/                          # Next.js App Router
+│   ├── page.tsx                  # Landing page
+│   ├── layout.tsx                # Root layout (Toaster, metadata)
+│   ├── globals.css               # Global styles
+│   ├── login/                    # Login page
+│   ├── register/                 # Sign-up page
+│   ├── api-docs/                 # Swagger UI page (/api-docs)
+│   ├── admin/                    # Admin panel (lyonel@gmail.com only)
+│   │   ├── layout.tsx            # Admin sidebar layout
+│   │   ├── users/                # User management
+│   │   ├── analytics/            # System-wide analytics
+│   │   ├── notifications/        # Broadcast notifications
+│   │   └── ai-monitor/           # AI usage monitoring
+│   ├── dashboard/                # Main user dashboard
+│   │   ├── page.tsx              # Dashboard home
+│   │   ├── layout.tsx            # Dashboard sidebar + nav
+│   │   ├── tasks/                # Task manager
+│   │   ├── calendar/             # Calendar view
+│   │   ├── ai/                   # AI assistant chat
+│   │   ├── analytics/            # Productivity analytics
+│   │   ├── timer/                # Pomodoro study timer
+│   │   ├── notifications/        # In-app notifications
+│   │   └── settings/             # User preferences
+│   └── api/                      # REST API route handlers
+│       ├── session/              # Login session (POST)
+│       ├── logout/               # Logout (POST)
+│       ├── tasks/                # Tasks CRUD
+│       ├── events/               # Calendar events CRUD
+│       ├── notifications/        # Notifications CRUD
+│       ├── study-sessions/       # Study session history
+│       ├── timer/                # Complete timer session
+│       ├── analytics/            # Productivity stats
+│       ├── settings/             # User settings
+│       ├── user/                 # Profile + preferences
+│       ├── export/               # Data export
+│       ├── auth/                 # Password reset
+│       ├── ai-optimize/          # Trigger AI schedule generation
+│       ├── ai/                   # AI endpoints
+│       │   ├── prioritize/       # Task prioritization
+│       │   ├── schedule/         # Schedule optimization
+│       │   └── chat/             # AI chat assistant
+│       └── admin/                # Admin-only endpoints
+│           ├── users/            # List / delete / deactivate users
+│           ├── analytics/        # System-wide stats
+│           ├── ai-usage/         # AI monitoring
+│           └── notifications/    # Broadcast notifications
+│               └── broadcast/
+├── lib/                          # Shared server utilities
+│   ├── admin.ts                  # Admin email constant
+│   ├── ai-cache.ts               # AI result caching (24h TTL)
+│   ├── ai-engine.ts              # Deterministic schedule optimizer
+│   ├── ai-sync-context.tsx       # Client-side AI sync state
+│   ├── api-helpers.ts            # verifySession, sanitize, response helpers
+│   ├── auth.ts                   # Auth utilities
+│   ├── firebase-admin.ts         # Firebase Admin SDK init
+│   ├── firebase.ts               # Firebase client SDK init
+│   ├── gemini.ts                 # Gemini API client + system prompt
+│   ├── notify.ts                 # createNotification helper
+│   ├── prisma.ts                 # Prisma client singleton
+│   ├── swagger.ts                # OpenAPI 3.0 spec (manual)
+│   └── utils.ts                  # Misc utilities
+├── prisma/                       # Database
+│   ├── schema.prisma             # Data models and relations
+│   └── migrations/               # SQL migration history
+├── tests/                        # Automated test suite (476 tests)
+│   ├── unit.test.ts              # API route unit + Admin RBAC (71)
+│   ├── frontend.test.tsx         # UI component tests (74)
+│   ├── integration.test.ts       # API ↔ DB integration (27)
+│   ├── security.test.ts          # Security tests (44)
+│   ├── ai-engine.test.ts         # AI engine unit (25)
+│   ├── ai.test.ts                # AI input variations (64)
+│   ├── ai-consistency.test.ts    # AI consistency (70)
+│   ├── ai-failure.test.ts        # AI failure handling (51)
+│   └── ai-abuse.test.ts          # AI abuse & misuse (50)
+├── components/                   # Reusable React components
+├── public/                       # Static assets
+├── Dockerfile                    # Production Docker image
+├── docker-compose.yml            # Local dev with PostgreSQL
+└── .github/workflows/cicd.yml   # GitHub Actions CI/CD pipeline
+```
