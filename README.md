@@ -418,7 +418,141 @@ WADS-Final-Project/
 └── docker-compose.yml    # Local dev with PostgreSQL
 ```
 
+## System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Client["Browser (Next.js Frontend)"]
+        UI["Pages & Components\nDashboard / Tasks / Calendar / AI / Timer"]
+        FC["Firebase Client SDK\nEmail + Google Auth"]
+    end
+
+    subgraph Server["Next.js Server (App Router)"]
+        API["API Routes\n/api/tasks /api/events /api/ai/* /api/admin/*"]
+        FA["Firebase Admin SDK\nSession cookie verification"]
+        PRISMA["Prisma ORM\nType-safe DB queries"]
+        AI_LIB["AI Engine\nlib/gemini.ts + lib/ai-engine.ts"]
+    end
+
+    subgraph External["External Services"]
+        FIREBASE["Firebase Auth\nUser identity"]
+        GEMINI["Google Gemini API\nTask prioritization / schedule / chat"]
+        DB["PostgreSQL\nNeon cloud database"]
+    end
+
+    subgraph DevOps["DevOps"]
+        GH["GitHub Repository"]
+        CI["GitHub Actions CI/CD"]
+        DOCKER["Docker + docker-compose"]
+        DEPLOY["Live Deployment\ne2526-wads-b4cc.csbihub.id"]
+    end
+
+    UI -->|"Firebase sign-in"| FC
+    FC -->|"POST /api/session with idToken"| API
+    UI -->|"Authenticated API calls with session cookie"| API
+    API -->|"Verify session cookie"| FA
+    FA -->|"Validate with"| FIREBASE
+    API -->|"DB queries"| PRISMA
+    PRISMA -->|"SQL"| DB
+    API -->|"AI requests"| AI_LIB
+    AI_LIB -->|"Gemini API calls"| GEMINI
+    GH --> CI
+    CI --> DOCKER
+    DOCKER --> DEPLOY
+```
+
+---
+
+## Database Schema (ERD)
+
+```mermaid
+erDiagram
+    User {
+        string id PK
+        string email
+        string name
+        enum role
+        datetime createdAt
+    }
+    Task {
+        int id PK
+        string userId FK
+        string title
+        string subject
+        enum priority
+        float aiScore
+        string aiReason
+        enum status
+        int estimatedMins
+        datetime dueDate
+        datetime completedAt
+        int progress
+        datetime createdAt
+    }
+    Event {
+        int id PK
+        string userId FK
+        string title
+        datetime startTime
+        datetime endTime
+        enum eventType
+        boolean aiGenerated
+        int taskId
+        datetime createdAt
+    }
+    StudySession {
+        int id PK
+        string userId FK
+        string subject
+        int taskId
+        int durationMin
+        float focusScore
+        datetime startedAt
+        datetime endedAt
+    }
+    Notification {
+        int id PK
+        string userId FK
+        string title
+        string body
+        enum type
+        boolean read
+        datetime createdAt
+    }
+    UserSettings {
+        int id PK
+        string userId FK
+        int preferredStartHour
+        int preferredEndHour
+        int pomodoroMins
+        int shortBreakMins
+        int longBreakMins
+        boolean notifDeadline
+        boolean notifSession
+        boolean notifAI
+    }
+    AiCache {
+        int id PK
+        string userId FK
+        string taskHash
+        json prioritization
+        json schedule
+        datetime generatedAt
+        datetime expiresAt
+    }
+
+    User ||--o{ Task : "has"
+    User ||--o{ Event : "has"
+    User ||--o{ StudySession : "has"
+    User ||--o{ Notification : "has"
+    User ||--o| UserSettings : "has"
+    User ||--o| AiCache : "has"
+```
+
+---
+
 ## Testing
+
 
 ### Overview
 
