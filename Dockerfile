@@ -45,7 +45,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY prisma ./prisma
 RUN npx prisma generate
-CMD ["npx", "prisma", "migrate", "deploy"]
+CMD ["npx", "prisma", "db", "push"]
 
 # ---------- Stage 4: production runner ----------
 FROM base AS runner
